@@ -86,7 +86,6 @@ export default function StudentDashboard() {
   const handleMoodSelect = (mood: string) => {
     setSelectedMood(mood);
     addXP(15, 'Daily Mood Check-in');
-    triggerConfetti();
   };
 
   return (
@@ -189,7 +188,6 @@ export default function StudentDashboard() {
                 learningGoals: ['competitive_exams', 'practice'],
                 onboardingCompleted: true,
               });
-              triggerConfetti();
             }}
             className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               isHigherEd

@@ -21,7 +21,6 @@ export default function AdminSettingsPage() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setSaved(true);
-    triggerConfetti();
     setTimeout(() => setSaved(false), 2500);
   };
 

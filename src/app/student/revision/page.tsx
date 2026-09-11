@@ -179,7 +179,6 @@ export default function RevisionGeneratorPage() {
         setActiveCardIndex((prev) => prev + 1);
       }, 300);
     } else {
-      triggerConfetti();
       toast.success('Deck Completed! 🎉', 'You reviewed all cards in this active recall session.');
     }
   };
@@ -222,7 +221,6 @@ export default function RevisionGeneratorPage() {
       setIsFlipped(false);
       setInputTopic('');
       setIsSynthesizing(false);
-      triggerConfetti();
       addXP(40, `Generated Revision Flashcards for ${newDeck.title}`);
       toast.success('Deck Synthesized', `Generated 3 active recall cards for "${newDeck.title}".`);
     }, 1200);

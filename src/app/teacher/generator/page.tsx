@@ -41,7 +41,6 @@ export default function TeacherGeneratorPage() {
     setIsGeneratingPaper(true);
     setTimeout(() => {
       setIsGeneratingPaper(false);
-      triggerConfetti();
       setGeneratedPaper(`========================================================================
              ST. JUDE INTERNATIONAL ACADEMY — STEM EXAMINATION
 Subject: ${subject}
@@ -81,7 +80,6 @@ SECTION C: COMPREHENSIVE DERIVATION & OLYMPIAD APPLICATION (20 Marks — 10 Mark
     setIsGeneratingPlan(true);
     setTimeout(() => {
       setIsGeneratingPlan(false);
-      triggerConfetti();
       setGeneratedPlan(`========================================================================
                   5E PEDAGOGICAL LESSON PLAN
 Subject: ${planSubject}

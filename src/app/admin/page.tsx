@@ -308,7 +308,6 @@ export default function AdminDashboardPage() {
                         type="button"
                         onClick={() => {
                           approveTeacherApplication(app.id);
-                          triggerConfetti();
                         }}
                         className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
                       >

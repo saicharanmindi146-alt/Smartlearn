@@ -170,7 +170,6 @@ export default function StudyPlannerPage() {
           const next = !s.completed;
           if (next) {
             addXP(35, `Completed study session: ${s.topic}`);
-            triggerConfetti();
             toast.success('Session Completed! (+35 XP)', `Great job finishing "${s.topic}".`);
           }
           return { ...s, completed: next };
@@ -218,7 +217,6 @@ export default function StudyPlannerPage() {
       }));
       setSessions(updated);
       setIsGenerating(false);
-      triggerConfetti();
       addXP(15, 'Generated Optimized AI Timetable');
       toast.success('Schedule Synthesized', 'Generated an updated study plan targeting current weak areas.');
     }, 1200);

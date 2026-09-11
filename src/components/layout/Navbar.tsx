@@ -73,13 +73,11 @@ export function Navbar() {
     switchDemoRole(role);
     setRoleDropdownOpen(false);
     setMobileMenuOpen(false);
-    triggerConfetti();
     router.push(roleStyles[role].dashboard);
   };
 
   const handleLogout = () => {
     logoutUser();
-    triggerConfetti();
     setMobileMenuOpen(false);
     router.push('/');
   };

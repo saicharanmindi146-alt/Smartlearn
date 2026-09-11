@@ -77,7 +77,6 @@ export default function AdminUsersPage() {
     setIsAddModalOpen(false);
     setNewUserName('');
     setNewUserEmail('');
-    triggerConfetti();
     showToast(`Added new ${newUserRole} account for ${newUser.name}`);
   };
 

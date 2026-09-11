@@ -94,7 +94,6 @@ export function WelcomeSplashModal() {
       sessionStorage.setItem('sl_login_welcome_shown', 'true');
     }
     setWelcomeSplashOpen(false);
-    triggerConfetti();
     if (signup) {
       router.push('/login?mode=signup');
     } else {

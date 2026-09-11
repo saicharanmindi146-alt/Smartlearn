@@ -141,7 +141,6 @@ export default function StudentNotebookPage() {
       const generatedAddon = `\n\n## 🤖 AI Synthesized Exam Tips (${timestamp}):\n• Key Theorem / Formula: Ensure units are dimensionally verified before substituting numerical values.\n• Common Diagnostic Trap: Confusing instantaneous rates of change with average intervals.\n• Practice Checkpoint: Re-run the practice questions in the Mock Tests hub to evaluate retention.`;
       handleContentChange(activeNote.content + generatedAddon);
       setIsGenerating(false);
-      triggerConfetti();
       addXP(30, 'Used AI Notes Synthesis');
       toast.success('Notes Synthesized (+30 XP)', 'AI added high-yield exam tips and formulas.');
     }, 1100);

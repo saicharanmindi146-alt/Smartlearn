@@ -204,7 +204,6 @@ export function Sidebar() {
         <button
           onClick={() => {
             logoutUser();
-            triggerConfetti();
             setMobileOpen(false);
             router.push('/');
           }}

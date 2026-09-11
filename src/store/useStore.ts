@@ -151,6 +151,7 @@ export const useStore = create<SmartLearnState>((set, get) => ({
       const profile = loadFromStorage<StudentAcademicProfile | null>(`${LS_ACADEMIC_PROFILE}_${user.id}`, null);
       set({ academicProfile: profile });
     }
+    get().triggerConfetti();
   },
 
   logoutUser: () => {
@@ -233,7 +234,6 @@ export const useStore = create<SmartLearnState>((set, get) => ({
       set({ currentUser: updatedUser });
 
       if (leveledUp) {
-        get().triggerConfetti();
         db.notifications.unshift({
           id: `notif-${Date.now()}`,
           userId: user.id,
@@ -391,7 +391,6 @@ export const useStore = create<SmartLearnState>((set, get) => ({
       linkUrl: '/admin/users',
     });
     set({ notifications: [...db.notifications] });
-    get().triggerConfetti();
   },
 
   rejectTeacherApplication: (id) => {

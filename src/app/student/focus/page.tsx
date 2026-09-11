@@ -34,7 +34,6 @@ export default function FocusModePage() {
         if (prev <= 1) {
           clearInterval(timer);
           setIsRunning(false);
-          triggerConfetti();
           addXP(100, 'Finished 25-minute uninterrupted Focus Session');
           return 0;
         }
@@ -42,7 +41,7 @@ export default function FocusModePage() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [isRunning, secondsLeft, triggerConfetti, addXP]);
+  }, [isRunning, secondsLeft, addXP]);
 
   const handleSelectPreset = (preset: 'pomodoro' | 'short' | 'deep') => {
     setMode(preset);

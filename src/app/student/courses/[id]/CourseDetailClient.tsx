@@ -566,7 +566,6 @@ export default function CourseDetailClient() {
     if (!completedLessons[activeLessonIndex]) {
       setCompletedLessons((prev) => ({ ...prev, [activeLessonIndex]: true }));
       addXP(50, `Completed: ${currentLesson.title}`);
-      triggerConfetti();
     }
   };
 

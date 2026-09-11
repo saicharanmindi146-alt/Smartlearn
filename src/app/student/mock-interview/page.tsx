@@ -233,7 +233,6 @@ export default function MockInterviewPage() {
       onboardingCompleted: true,
     };
     setAcademicProfile(btechProfile);
-    triggerConfetti();
   };
 
   // Timer countdown
@@ -366,7 +365,6 @@ export default function MockInterviewPage() {
     setIsTimerRunning(false);
     setInterviewState('COMPLETED');
     addXP(100, 'Completed AI Mock Interview');
-    triggerConfetti();
 
     // Intelligent score simulation based on answers
     let totalLength = 0;

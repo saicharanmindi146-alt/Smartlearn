@@ -131,7 +131,6 @@ export default function StudentOnboardingPage() {
     };
 
     setAcademicProfile(profile);
-    triggerConfetti();
 
     toast.success(
       'Academic Profile Saved!',

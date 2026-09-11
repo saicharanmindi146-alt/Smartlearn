@@ -182,7 +182,6 @@ export default function AdaptiveTestRunnerClient() {
     setSubmissionResult(submission);
     setIsSubmitted(true);
     setShowSubmitModal(false);
-    triggerConfetti();
     addXP(Math.round(score * 2.5), `Completed: ${test.title}`);
 
     // Persist learning loop weak topics in localStorage

@@ -95,7 +95,6 @@ export default function CreateTestPage() {
       createdAt: new Date().toISOString(),
     };
     db.tests.unshift(newTest);
-    triggerConfetti();
     router.push('/teacher');
   };
 
