@@ -1,15 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
-  Sparkles,
-  Search,
   Moon,
   Sun,
-  ChevronDown,
-  UserCheck,
   LogOut,
   Shield,
   GraduationCap,
@@ -30,14 +26,10 @@ export function Navbar() {
   const currentUser = useStore((state) => state.currentUser);
   const isLoggedIn = useStore((state) => state.isLoggedIn);
   const logoutUser = useStore((state) => state.logoutUser);
-  const switchDemoRole = useStore((state) => state.switchDemoRole);
   const theme = useStore((state) => state.theme);
   const toggleTheme = useStore((state) => state.toggleTheme);
-  const setCommandPaletteOpen = useStore((state) => state.setCommandPaletteOpen);
-  const triggerConfetti = useStore((state) => state.triggerConfetti);
 
-  const [roleDropdownOpen, setRoleDropdownOpen] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
   const currentRole = currentUser?.role || 'STUDENT';
   const isLandingPage = pathname === '/';
@@ -67,13 +59,6 @@ export function Navbar() {
       icon: <Shield className="w-3.5 h-3.5 mr-1 text-amber-500" />,
       dashboard: '/admin',
     },
-  };
-
-  const handleSwitchRole = (role: Role) => {
-    switchDemoRole(role);
-    setRoleDropdownOpen(false);
-    setMobileMenuOpen(false);
-    router.push(roleStyles[role].dashboard);
   };
 
   const handleLogout = () => {
@@ -139,7 +124,7 @@ export function Navbar() {
           {/* Portals Dropdown */}
           <div className="relative group cursor-pointer flex items-center gap-1 hover:text-[#d82a4e] transition-colors py-2">
             <span>Portals</span>
-            <ChevronDown className="w-3.5 h-3.5 opacity-70" />
+            <svg className="w-3.5 h-3.5 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
             <div className="absolute top-full left-0 mt-1 w-56 py-2 bg-white dark:bg-[#1a1e24] rounded-xl shadow-2xl border border-slate-200 dark:border-[#283038] text-slate-800 dark:text-slate-100 hidden group-hover:block transition-all z-50">
               <Link
                 href="/get-started"
@@ -148,36 +133,37 @@ export function Navbar() {
                 <span>🚀 Choose Portal / Onboarding</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-              <button
-                onClick={() => handleSwitchRole('STUDENT')}
-                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between cursor-pointer"
+              <Link
+                href="/login?role=student&mode=signin"
+                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between"
               >
                 <span>🎓 Student Workspace</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-blue-500" />
-              </button>
-              <button
-                onClick={() => handleSwitchRole('TEACHER')}
-                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between cursor-pointer"
+              </Link>
+              <Link
+                href="/login?role=teacher&mode=signin"
+                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between"
               >
                 <span>👩‍🏫 Teacher Hub</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-purple-500" />
-              </button>
-              <button
-                onClick={() => handleSwitchRole('PARENT')}
-                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between cursor-pointer"
+              </Link>
+              <Link
+                href="/login?role=parent&mode=signin"
+                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between"
               >
                 <span>👨‍👩‍👧 Parent Portal</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-emerald-500" />
-              </button>
-              <button
-                onClick={() => handleSwitchRole('ADMIN')}
-                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between cursor-pointer"
+              </Link>
+              <Link
+                href="/login?role=admin&mode=signin"
+                className="w-full text-left px-4 py-2.5 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-[#20252b] flex items-center justify-between"
               >
                 <span>⚡ Admin Console</span>
                 <ArrowUpRight className="w-3.5 h-3.5 text-amber-500" />
-              </button>
+              </Link>
             </div>
           </div>
+
 
           <Link
             href="/blog"
@@ -223,56 +209,10 @@ export function Navbar() {
           {/* Logged in controls: Role Switcher, Notifications, Dashboard shortcut, Logout */}
           {isLoggedIn && currentUser ? (
             <div className="flex items-center gap-2">
-              {/* Persona Switcher (Only when logged in) */}
-              <div className="relative hidden sm:block">
-                <button
-                  onClick={() => setRoleDropdownOpen(!roleDropdownOpen)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold rounded-md border border-slate-200 dark:border-[#283038] bg-slate-100 dark:bg-[#20252b] text-slate-700 dark:text-slate-200 hover:bg-slate-200/70 dark:hover:bg-[#283038] transition-all cursor-pointer"
-                  title="Switch active role"
-                >
-                  <UserCheck className="w-3.5 h-3.5 text-[#d82a4e]" />
-                  <span className="capitalize">{currentRole.toLowerCase()}</span>
-                  <ChevronDown className="w-3 h-3 text-slate-400" />
-                </button>
-
-                {roleDropdownOpen && (
-                  <>
-                    <div className="fixed inset-0 z-30" onClick={() => setRoleDropdownOpen(false)} />
-                    <div className="absolute right-0 mt-2 w-56 rounded-xl bg-white dark:bg-[#1a1e24] border border-slate-200 dark:border-[#283038] shadow-2xl z-40 p-1.5 space-y-1 animate-in fade-in zoom-in-95 duration-150 text-slate-800 dark:text-slate-100">
-                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                        Switch Active Portal
-                      </div>
-                      <button
-                        onClick={() => handleSwitchRole('STUDENT')}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
-                      >
-                        <span>🎓 Student Workspace</span>
-                        {currentRole === 'STUDENT' && <span className="text-[#d82a4e] text-[10px] font-bold">Active</span>}
-                      </button>
-                      <button
-                        onClick={() => handleSwitchRole('TEACHER')}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
-                      >
-                        <span>👩‍🏫 Teacher Hub</span>
-                        {currentRole === 'TEACHER' && <span className="text-[#d82a4e] text-[10px] font-bold">Active</span>}
-                      </button>
-                      <button
-                        onClick={() => handleSwitchRole('PARENT')}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
-                      >
-                        <span>👨‍👩‍👧 Parent Portal</span>
-                        {currentRole === 'PARENT' && <span className="text-emerald-500 text-[10px] font-bold">Active</span>}
-                      </button>
-                      <button
-                        onClick={() => handleSwitchRole('ADMIN')}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
-                      >
-                        <span>⚡ Admin Console</span>
-                        {currentRole === 'ADMIN' && <span className="text-amber-500 text-[10px] font-bold">Active</span>}
-                      </button>
-                    </div>
-                  </>
-                )}
+              {/* Current Role Badge — read-only, no switching */}
+              <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold rounded-md border ${roleStyles[currentRole].badgeClass}`}>
+                {roleStyles[currentRole].icon}
+                <span>{roleStyles[currentRole].name}</span>
               </div>
 
               {/* User Notifications */}
