@@ -78,99 +78,105 @@ function makeChapter(subjectId: string, title: string, order: number, concepts: 
 // Admin must upload actual content via the Curriculum CMS.
 // ============================================================
 
-const mathSubjectId = uid('sub');
+import { CLASS_10_MATH_CHAPTERS } from '@/data/class10MathData';
+
+export const CLASS_10_MATH_SUBJECT_ID = 'sub-class10-math';
+
+export const CLASS_10_MATH_SUBJECT: Subject = {
+  id: CLASS_10_MATH_SUBJECT_ID,
+  classId: 'class-10',
+  name: 'Mathematics',
+  board: 'CBSE',
+  academicYear: '2026-27',
+  language: 'English',
+  description: 'Official NCERT Class 10 Mathematics (2026-27 Reprint) — All 14 Chapters, Appendices A1 & A2, Complete Exercise Solutions with Step-by-Step Hints.',
+  status: 'published',
+  audit: SYSTEM_AUDIT,
+  chapters: CLASS_10_MATH_CHAPTERS.map((ch, idx) => {
+    const chapterId = `chap-math10-${ch.chapterNumber}`;
+    return {
+      id: chapterId,
+      subjectId: CLASS_10_MATH_SUBJECT_ID,
+      title: typeof ch.chapterNumber === 'number' ? `Chapter ${ch.chapterNumber}: ${ch.title}` : ch.title,
+      description: ch.description,
+      displayOrder: idx + 1,
+      concepts: ch.concepts.map((con, cIdx) => ({
+        id: `con-math10-${ch.chapterNumber}-${cIdx + 1}`,
+        chapterId,
+        title: con.title,
+        description: con.content,
+        displayOrder: cIdx + 1,
+        resources: [],
+      })),
+      resources: [
+        {
+          id: `res-math10-${ch.chapterNumber}-theory`,
+          parentId: chapterId,
+          parentType: 'chapter',
+          type: 'textbook',
+          title: `${ch.title} — Theory & Concept Guide`,
+          description: `Detailed textbook theory, definitions, proofs, and solved examples for ${ch.title}.`,
+          tags: ['NCERT', 'Theory', 'Class 10', 'Board Exam'],
+          language: 'English',
+          status: 'published',
+          audit: SYSTEM_AUDIT,
+          viewCount: 430 + idx * 15,
+          source: 'NCERT Mathematics Class X (2026-27)',
+        },
+        {
+          id: `res-math10-${ch.chapterNumber}-solutions`,
+          parentId: chapterId,
+          parentType: 'chapter',
+          type: 'notes',
+          title: `${ch.title} — Complete Exercise Solutions & Hints`,
+          description: `Full verified answers for every question in all exercises of ${ch.title} with step-by-step methods.`,
+          tags: ['NCERT Solutions', 'Step-by-Step', 'Verified Answers', 'Exercises'],
+          language: 'English',
+          status: 'published',
+          audit: SYSTEM_AUDIT,
+          viewCount: 820 + idx * 25,
+          source: 'NCERT Official Answers/Hints',
+        },
+        {
+          id: `res-math10-${ch.chapterNumber}-formulas`,
+          parentId: chapterId,
+          parentType: 'chapter',
+          type: 'notes',
+          title: `${ch.title} — Key Formulas & Quick Notes`,
+          description: `Crucial formulas, theorems, algebraic shortcuts, and examination highlights.`,
+          tags: ['Formulas', 'Cheat Sheet', 'Quick Revision'],
+          language: 'English',
+          status: 'published',
+          audit: SYSTEM_AUDIT,
+          viewCount: 350 + idx * 10,
+          source: 'SmartLearn Academic STEM Wing',
+        },
+        {
+          id: `res-math10-${ch.chapterNumber}-quiz`,
+          parentId: chapterId,
+          parentType: 'chapter',
+          type: 'quiz',
+          title: `${ch.title} — Self-Assessment & Mastery Quiz`,
+          description: `Interactive multiple choice diagnostic quiz with instant answers and explanations.`,
+          tags: ['Practice Quiz', 'MCQs', 'Instant Score'],
+          language: 'English',
+          status: 'published',
+          audit: SYSTEM_AUDIT,
+          viewCount: 540 + idx * 18,
+          source: 'SmartLearn Adaptive Quiz Engine',
+        },
+      ],
+    };
+  }),
+};
+
 const sciSubjectId = uid('sub');
 const engSubjectId = uid('sub');
 const socialSubjectId = uid('sub');
 const itSubjectId = uid('sub');
 
 export const CLASS_10_SUBJECTS_PLACEHOLDER: Subject[] = [
-  {
-    id: mathSubjectId,
-    classId: 'class-10',
-    name: 'Mathematics',
-    board: 'CBSE',
-    academicYear: '2025-26',
-    language: 'English',
-    description: 'NCERT Mathematics for Class 10 — Algebra, Geometry, Trigonometry, Statistics & Probability',
-    status: 'draft',
-    audit: SYSTEM_AUDIT,
-    chapters: [
-      makeChapter(mathSubjectId, 'Real Numbers', 1, [
-        'Euclid\'s Division Lemma',
-        'Fundamental Theorem of Arithmetic',
-        'Irrational Numbers',
-        'Rational Numbers and their Decimal Expansions',
-      ]),
-      makeChapter(mathSubjectId, 'Polynomials', 2, [
-        'Geometrical Meaning of Zeroes of a Polynomial',
-        'Relationship between Zeroes and Coefficients of a Polynomial',
-        'Division Algorithm for Polynomials',
-      ]),
-      makeChapter(mathSubjectId, 'Pair of Linear Equations in Two Variables', 3, [
-        'Graphical Method of Solution',
-        'Substitution Method',
-        'Elimination Method',
-        'Cross-Multiplication Method',
-      ]),
-      makeChapter(mathSubjectId, 'Quadratic Equations', 4, [
-        'Standard Form of a Quadratic Equation',
-        'Solution by Factorisation',
-        'Solution by Completing the Square',
-        'Nature of Roots & Discriminant',
-      ]),
-      makeChapter(mathSubjectId, 'Arithmetic Progressions', 5, [
-        'Introduction to AP',
-        'nth Term of an AP',
-        'Sum of First n Terms of an AP',
-      ]),
-      makeChapter(mathSubjectId, 'Triangles', 6, [
-        'Similar Figures',
-        'Similarity of Triangles',
-        'Basic Proportionality Theorem',
-        'Pythagoras Theorem',
-      ]),
-      makeChapter(mathSubjectId, 'Coordinate Geometry', 7, [
-        'Distance Formula',
-        'Section Formula',
-        'Area of a Triangle',
-      ]),
-      makeChapter(mathSubjectId, 'Introduction to Trigonometry', 8, [
-        'Trigonometric Ratios',
-        'Trigonometric Ratios of Some Specific Angles',
-        'Trigonometric Identities',
-      ]),
-      makeChapter(mathSubjectId, 'Applications of Trigonometry', 9, [
-        'Heights and Distances',
-        'Angle of Elevation & Depression',
-      ]),
-      makeChapter(mathSubjectId, 'Circles', 10, [
-        'Tangent to a Circle',
-        'Number of Tangents from a Point on a Circle',
-      ]),
-      makeChapter(mathSubjectId, 'Areas Related to Circles', 11, [
-        'Perimeter and Area of a Circle',
-        'Areas of Sector and Segment',
-        'Areas of Combinations of Plane Figures',
-      ]),
-      makeChapter(mathSubjectId, 'Surface Areas and Volumes', 12, [
-        'Surface Area of a Combination of Solids',
-        'Volume of a Combination of Solids',
-        'Conversion of Solid from One Shape to Another',
-        'Frustum of a Cone',
-      ]),
-      makeChapter(mathSubjectId, 'Statistics', 13, [
-        'Mean of Grouped Data',
-        'Mode of Grouped Data',
-        'Median of Grouped Data',
-        'Graphical Representation: Ogive',
-      ]),
-      makeChapter(mathSubjectId, 'Probability', 14, [
-        'Probability — A Theoretical Approach',
-        'Classical Definition of Probability',
-      ]),
-    ],
-  },
+  CLASS_10_MATH_SUBJECT,
   {
     id: sciSubjectId,
     classId: 'class-10',

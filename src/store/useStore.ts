@@ -99,8 +99,17 @@ export const useStore = create<SmartLearnState>((set, get) => ({
   confettiTrigger: 0,
   onboardingSeen: {},
 
-  // Load persisted academic profile
-  academicProfile: loadFromStorage<StudentAcademicProfile | null>(LS_ACADEMIC_PROFILE, null),
+  // Default Class 10 academic profile for instant workable experience
+  academicProfile: loadFromStorage<StudentAcademicProfile | null>(LS_ACADEMIC_PROFILE, {
+    educationalLevel: 'School',
+    stream: 'Secondary',
+    classLevel: 'Class 10',
+    classId: 'class-10',
+    board: 'CBSE',
+    subjects: ['Mathematics', 'Science', 'English'],
+    learningGoals: ['exam_prep', 'concept_learning'],
+    onboardingCompleted: true,
+  }),
   recentlyViewed: loadFromStorage<RecentlyViewedItem[]>(LS_RECENTLY_VIEWED, []),
   bookmarkedResourceIds: loadFromStorage<string[]>(LS_BOOKMARKS, []),
 

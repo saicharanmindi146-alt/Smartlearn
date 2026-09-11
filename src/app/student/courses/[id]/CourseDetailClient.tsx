@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import {
   ArrowLeft,
+  ArrowRight,
   Play,
   CheckCircle2,
   BookOpen,
@@ -33,6 +34,7 @@ import { useToast } from '@/components/shared/ToastContext';
 import { CourseHierarchyBrowser } from '@/components/shared/CourseHierarchyBrowser';
 import { getClassAncestors } from '@/lib/curriculumData';
 import { Subject, LearningResource, Chapter } from '@/types';
+import { Class10MathReaderModal } from '@/components/shared/Class10MathReaderModal';
 
 // ============================================================
 // Subject Curriculum Deep-Dive View Component
@@ -57,6 +59,10 @@ function SubjectCurriculumView({
   });
 
   const [activeResourceModal, setActiveResourceModal] = useState<LearningResource | null>(null);
+  const [activeMathReader, setActiveMathReader] = useState<{
+    chapterId: string;
+    tab: 'solutions' | 'theory' | 'formulas' | 'quiz';
+  } | null>(null);
 
   // Find class ancestors
   const classId = academicProfile?.classId || 'cls-sec-10';
@@ -96,7 +102,28 @@ function SubjectCurriculumView({
       window.open(resourceUrl, '_blank', 'noopener,noreferrer');
       toast.success('Resource Opened', `Viewing "${res.title}" in a new tab.`);
     } else {
-      setActiveResourceModal(res);
+      const isMath =
+        subject.name.toLowerCase().includes('math') ||
+        subject.id === 'sub-class10-math' ||
+        res.id.startsWith('res-math10');
+
+      if (isMath) {
+        let tab: 'solutions' | 'theory' | 'formulas' | 'quiz' = 'solutions';
+        if (res.type === 'quiz' || res.title.toLowerCase().includes('quiz')) {
+          tab = 'quiz';
+        } else if (res.title.toLowerCase().includes('formula') || res.title.toLowerCase().includes('theorem')) {
+          tab = 'formulas';
+        } else if (res.type === 'textbook' || res.title.toLowerCase().includes('theory')) {
+          tab = 'theory';
+        }
+
+        setActiveMathReader({
+          chapterId: chapter.id,
+          tab,
+        });
+      } else {
+        setActiveResourceModal(res);
+      }
     }
   };
 
@@ -215,6 +242,38 @@ function SubjectCurriculumView({
         {/* Decorative background glow */}
         <div className="absolute -right-16 -top-16 w-64 h-64 bg-white/10 rounded-full blur-3xl pointer-events-none" />
       </div>
+
+      {/* Interactive Mathematics Solutions Hub Highlight */}
+      {(subject.name.toLowerCase().includes('math') || subject.id === 'sub-class10-math') && (
+        <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-emerald-500/15 via-blue-500/15 to-indigo-500/15 border border-emerald-500/30 dark:border-emerald-500/20 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-md shadow-emerald-600/25 shrink-0">
+              <CheckCircle2 className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white">
+                  Class 10 NCERT Solutions &amp; Verified Exercise Key
+                </h3>
+                <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+                  All 14 Chapters + Appendices
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                Every exercise from Chapter 1 to 14, Appendix A1 (Proofs) &amp; A2 (Modelling) with official verified answers &amp; hints.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setActiveMathReader({ chapterId: 'ch-1', tab: 'solutions' })}
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black shadow-lg shadow-emerald-600/25 transition-all flex items-center justify-center gap-2 cursor-pointer shrink-0"
+          >
+            <span>Open Exercise Solutions &amp; Hints</span>
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* Main Layout: Chapter Accordions (2 cols) + Sticky Quick Jump (1 col) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -521,6 +580,15 @@ function SubjectCurriculumView({
             </div>
           </div>
         </div>
+      )}
+
+      {/* Class 10 Math Full Reader & Exercise Solutions Modal */}
+      {activeMathReader && (
+        <Class10MathReaderModal
+          initialChapterId={activeMathReader.chapterId}
+          initialTab={activeMathReader.tab}
+          onClose={() => setActiveMathReader(null)}
+        />
       )}
     </div>
   );

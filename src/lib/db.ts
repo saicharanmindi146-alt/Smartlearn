@@ -33,7 +33,7 @@ export const INITIAL_USERS: User[] = [
       coins: 380,
       streakDays: 7,
       lastActive: 'Just now',
-      enrolledCourseIds: ['course-calc-1', 'course-phys-1', 'course-ai-1'],
+      enrolledCourseIds: ['sub-class10-math', 'course-math-10', 'course-calc-1', 'course-phys-1', 'course-ai-1'],
       badges: ['badge-quick-learner', 'badge-math-wizard', 'badge-streak-master', 'badge-quiz-champion'],
     },
   },
@@ -166,6 +166,59 @@ TEACHERS_DATA.forEach((t, i) => {
 
 // 15 Realistic Courses
 export const INITIAL_COURSES: Course[] = [
+  {
+    id: 'course-math-10',
+    title: 'Class 10 NCERT Mathematics: Complete 14 Chapters & Solutions',
+    description: 'Official Class 10 NCERT Mathematics (Reprint 2026-27): Real Numbers, Polynomials, Linear Equations, Quadratic Equations, Trigonometry, Circles, Statistics, Probability & Appendices with full verified exercise answers and step-by-step hints.',
+    subject: 'Mathematics',
+    grade: 'Grade 10',
+    difficulty: 'Intermediate',
+    thumbnail: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop&q=80',
+    instructorName: 'Dr. Sarah Jenkins',
+    instructorRole: 'Head of Mathematics & STEM',
+    rating: 4.98,
+    enrollmentCount: 680,
+    durationHours: 36,
+    modules: [
+      {
+        id: 'mod-m10-algebra',
+        title: 'Unit 1: Number Systems & Algebra (Ch 1 - Ch 4)',
+        durationMinutes: 240,
+        lessons: [
+          { id: 'les-m10-1', title: 'Chapter 1: Real Numbers & Fundamental Theorem', durationMinutes: 60, type: 'reading', completed: true },
+          { id: 'les-m10-2', title: 'Chapter 2: Polynomials & Geometric Zeroes', durationMinutes: 60, type: 'reading', completed: true },
+          { id: 'les-m10-3', title: 'Chapter 3: Linear Equations in Two Variables', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-4', title: 'Chapter 4: Quadratic Equations & Roots', durationMinutes: 60, type: 'reading', completed: false },
+        ],
+      },
+      {
+        id: 'mod-m10-geo-trig',
+        title: 'Unit 2: Sequences, Geometry & Trigonometry (Ch 5 - Ch 9)',
+        durationMinutes: 300,
+        lessons: [
+          { id: 'les-m10-5', title: 'Chapter 5: Arithmetic Progressions (AP)', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-6', title: 'Chapter 6: Triangles & Similarity (BPT)', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-7', title: 'Chapter 7: Coordinate Geometry & Distance', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-8', title: 'Chapter 8: Trigonometric Ratios & Identities', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-9', title: 'Chapter 9: Heights & Distances Applications', durationMinutes: 60, type: 'reading', completed: false },
+        ],
+      },
+      {
+        id: 'mod-m10-mensuration',
+        title: 'Unit 3: Mensuration, Statistics & Appendices (Ch 10 - Ch 14, A1, A2)',
+        durationMinutes: 360,
+        lessons: [
+          { id: 'les-m10-10', title: 'Chapter 10: Circles & Tangent Properties', durationMinutes: 50, type: 'reading', completed: false },
+          { id: 'les-m10-11', title: 'Chapter 11: Areas Related to Circles', durationMinutes: 50, type: 'reading', completed: false },
+          { id: 'les-m10-12', title: 'Chapter 12: Surface Areas & Volumes of Combinations', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-13', title: 'Chapter 13: Statistics (Mean, Median, Mode)', durationMinutes: 60, type: 'reading', completed: false },
+          { id: 'les-m10-14', title: 'Chapter 14: Probability (Theoretical Approach)', durationMinutes: 50, type: 'reading', completed: false },
+          { id: 'les-m10-a1', title: 'Appendix A1: Proofs in Mathematics', durationMinutes: 45, type: 'reading', completed: false },
+          { id: 'les-m10-a2', title: 'Appendix A2: Mathematical Modelling', durationMinutes: 45, type: 'reading', completed: false },
+        ],
+      },
+    ],
+  },
   {
     id: 'course-calc-1',
     title: 'Mastering Differential Calculus & Applications',
@@ -1028,10 +1081,14 @@ class SmartLearnDatabase {
 
   /** Find subject by id across all classes */
   getSubjectById(subjectId: string): import('@/types').Subject | undefined {
+    const targetId =
+      subjectId === 'course-math-10' || subjectId === 'class-10-math' || subjectId === 'math'
+        ? 'sub-class10-math'
+        : subjectId;
     for (const level of this.curriculum) {
       for (const stream of level.streams) {
         for (const cls of stream.classes) {
-          const sub = cls.subjects.find(s => s.id === subjectId);
+          const sub = cls.subjects.find(s => s.id === targetId || s.id === subjectId);
           if (sub) return sub;
         }
       }

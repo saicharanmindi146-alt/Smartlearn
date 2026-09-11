@@ -108,14 +108,11 @@ function CoursesContent() {
   });
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
-  // Get curriculum subjects for this student's class
-  const curriculumSubjects = academicProfile?.classId
-    ? db.getPublishedSubjectsByClassId(academicProfile.classId)
-    : [];
+  // Get curriculum subjects for this student's class (defaulting to Class 10 for instant availability)
+  const effectiveClassId = academicProfile?.classId || 'class-10';
+  const curriculumSubjects = db.getPublishedSubjectsByClassId(effectiveClassId);
 
-  const classAncestors = academicProfile?.classId
-    ? getClassAncestors(academicProfile.classId)
-    : null;
+  const classAncestors = getClassAncestors(effectiveClassId);
 
   const courses = db.courses;
 
@@ -269,26 +266,54 @@ function CoursesContent() {
           )}
         </div>
       ) : (
-        <div className="p-5 rounded-3xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold">
-              <GraduationCap className="w-5 h-5" />
+        <div className="space-y-4">
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border border-blue-200 dark:border-blue-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                  Set up your Academic Profile
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Currently featuring Class 10 CBSE Curriculum. Personalise your Class &amp; Board anytime.
+                </p>
+              </div>
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                Set up your Academic Profile
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Select your School/College level, Class, Board, and Subjects for a tailored syllabus library.
-              </p>
-            </div>
+            <Link
+              href="/student/onboarding"
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs shrink-0"
+            >
+              Customise Profile &rarr;
+            </Link>
           </div>
-          <Link
-            href="/student/onboarding"
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-xs"
-          >
-            Get Started &rarr;
-          </Link>
+
+          {curriculumSubjects.length > 0 && (
+            <div className="p-6 rounded-3xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 border border-blue-200/60 dark:border-blue-800/40 backdrop-blur-xs space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    Featured Class 10 CBSE Curriculum
+                  </h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Official NCERT chapters, exercise solutions, and appendices.
+                  </p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {curriculumSubjects.map((sub) => (
+                  <CurriculumSubjectCard
+                    key={sub.id}
+                    subject={sub}
+                    classId={effectiveClassId}
+                    classLevel="Class 10"
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
