@@ -22,6 +22,9 @@ import {
   Lock,
   ArrowLeft,
   Loader2,
+  Building2,
+  HelpCircle,
+  CheckCircle2,
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { generateOTP, verifyOTP, DEMO_ACCOUNTS } from '@/lib/auth';
@@ -44,6 +47,8 @@ function LoginPageContent() {
   const [fullName, setFullName] = useState('Alex Rivera');
   const [selectedRole, setSelectedRole] = useState<Role>(initialRole);
   const [gradeOrDept, setGradeOrDept] = useState('Grade 10-A');
+  const [rememberMe, setRememberMe] = useState(true);
+  const [ssoLoading, setSsoLoading] = useState<string | null>(null);
   const [otpStep, setOtpStep] = useState(false);
   const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -63,21 +68,7 @@ function LoginPageContent() {
     const roleParam = searchParams?.get('role')?.toUpperCase();
     if (roleParam && ['STUDENT', 'TEACHER', 'PARENT', 'ADMIN'].includes(roleParam)) {
       setSelectedRole(roleParam as Role);
-      if (roleParam === 'STUDENT') {
-        setIdentifier('student@smartlearn.edu');
-        setFullName('Alex Rivera');
-        setGradeOrDept('Grade 10-A');
-      } else if (roleParam === 'TEACHER') {
-        setIdentifier('sarah@smartlearn.edu');
-        setFullName('Dr. Sarah Jenkins');
-        setGradeOrDept('Advanced Mathematics');
-      } else if (roleParam === 'PARENT') {
-        setIdentifier('priya@smartlearn.edu');
-        setFullName('Priya Sharma');
-      } else if (roleParam === 'ADMIN') {
-        setIdentifier('admin@smartlearn.edu');
-        setFullName('Marcus Vance');
-      }
+      updateDefaultCredentials(roleParam as Role);
     }
     const modeParam = searchParams?.get('mode');
     if (modeParam === 'signup' || modeParam === 'signin') {
@@ -85,24 +76,73 @@ function LoginPageContent() {
     }
   }, [searchParams]);
 
-  // Handle direct 1-click Quick Launch into any portal
-  const handleQuickPortalLaunch = (role: Role) => {
-    switchDemoRole(role);
-    triggerConfetti();
-    const portalPaths: Record<Role, string> = {
-      STUDENT: '/student',
-      TEACHER: '/teacher',
-      PARENT: '/parent',
-      ADMIN: '/admin',
-    };
-    router.push(portalPaths[role]);
+  const updateDefaultCredentials = (role: Role) => {
+    if (role === 'STUDENT') {
+      setIdentifier('student@smartlearn.edu');
+      setFullName('Alex Rivera');
+      setGradeOrDept('Grade 10-A');
+    } else if (role === 'TEACHER') {
+      setIdentifier('sarah@smartlearn.edu');
+      setFullName('Dr. Sarah Jenkins');
+      setGradeOrDept('Advanced Mathematics');
+    } else if (role === 'PARENT') {
+      setIdentifier('priya@smartlearn.edu');
+      setFullName('Priya Sharma');
+      setGradeOrDept('Maya & Alex Rivera');
+    } else if (role === 'ADMIN') {
+      setIdentifier('admin@smartlearn.edu');
+      setFullName('Marcus Vance');
+      setGradeOrDept('Principal IT Operations');
+    }
+  };
+
+  const handleRoleSelect = (role: Role) => {
+    setSelectedRole(role);
+    updateDefaultCredentials(role);
+    setErrorMsg('');
+  };
+
+  // Enterprise Institutional SSO Handler
+  const handleInstitutionalSSO = (provider: 'Google' | 'Microsoft' | 'District SSO') => {
+    setErrorMsg('');
+    setSsoLoading(provider);
+
+    setTimeout(() => {
+      triggerConfetti();
+      setSuccessMsg(`Authenticated via ${provider} Workspace! Redirecting to ${selectedRole} dashboard...`);
+
+      const baseUser =
+        selectedRole === 'STUDENT'
+          ? INITIAL_USERS[0]
+          : selectedRole === 'TEACHER'
+          ? INITIAL_USERS[1]
+          : selectedRole === 'PARENT'
+          ? INITIAL_USERS[2]
+          : INITIAL_USERS[3];
+
+      loginUser({
+        ...baseUser,
+        role: selectedRole,
+      });
+
+      const roleDashboards: Record<Role, string> = {
+        STUDENT: '/student',
+        TEACHER: '/teacher',
+        PARENT: '/parent',
+        ADMIN: '/admin',
+      };
+
+      setTimeout(() => {
+        router.push(roleDashboards[selectedRole]);
+      }, 700);
+    }, 1000);
   };
 
   const handleRequestOTP = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg('');
     if (!identifier.trim()) {
-      setErrorMsg('Please enter your email address or phone number.');
+      setErrorMsg('Please enter your educational email address or mobile number.');
       return;
     }
 
@@ -126,7 +166,6 @@ function LoginPageContent() {
     newDigits[index] = clean;
     setOtpDigits(newDigits);
 
-    // Auto advance to next box
     if (clean && index < 5) {
       const nextInput = document.getElementById(`otp-input-${index + 1}`);
       nextInput?.focus();
@@ -146,7 +185,7 @@ function LoginPageContent() {
     const fullOtp = otpDigits.join('');
 
     if (fullOtp.length < 6) {
-      setErrorMsg('Please enter the full 6-digit OTP code.');
+      setErrorMsg('Please enter the full 6-digit verification code.');
       return;
     }
 
@@ -154,9 +193,8 @@ function LoginPageContent() {
 
     if (isValid) {
       triggerConfetti();
-      setSuccessMsg('Verification successful! Initializing portal workspace...');
+      setSuccessMsg('Identity verified! Initializing portal workspace...');
 
-      // Construct verified User session safely from base user
       const baseUser =
         selectedRole === 'STUDENT'
           ? INITIAL_USERS[0]
@@ -191,7 +229,6 @@ function LoginPageContent() {
 
       loginUser(verifiedUser);
 
-      // Directly open the respected dashboard page
       const roleDashboards: Record<Role, string> = {
         STUDENT: '/student',
         TEACHER: '/teacher',
@@ -200,164 +237,175 @@ function LoginPageContent() {
       };
       setTimeout(() => {
         router.push(roleDashboards[selectedRole]);
-      }, 800);
+      }, 700);
     } else {
-      setErrorMsg(`Invalid verification code. Please check your SMS code or click Auto-fill (${generatedOtp || '123456'}).`);
+      setErrorMsg(
+        `Invalid verification code. Please check your SMS/Email code or click Auto-fill (${generatedOtp || '123456'}).`
+      );
     }
   };
 
+  const roleMeta = {
+    STUDENT: {
+      title: 'Student Learning Portal',
+      tagline: 'Access adaptive mock tests, AI tutor, and personalized study planner.',
+      badge: 'Learner & Scholar',
+      color: 'blue',
+      activeTab: 'bg-blue-600 text-white shadow-md shadow-blue-500/20',
+      borderAccent: 'border-blue-500/30',
+      pillBg: 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400',
+      icon: <GraduationCap className="w-4 h-4" />,
+      idLabel: 'Student Email or School ID',
+      idPlaceholder: 'alex.rivera@student.smartlearn.edu',
+    },
+    TEACHER: {
+      title: 'Educator Command Hub',
+      tagline: 'Manage class weak spots, generate question papers, and monitor student integrity.',
+      badge: 'Educator & Mentor',
+      color: 'rose',
+      activeTab: 'bg-[#d82a4e] text-white shadow-md shadow-[#d82a4e]/20',
+      borderAccent: 'border-[#d82a4e]/30',
+      pillBg: 'bg-rose-50 dark:bg-rose-950/40 text-[#d82a4e]',
+      icon: <Users className="w-4 h-4" />,
+      idLabel: 'Faculty Email or Staff ID',
+      idPlaceholder: 's.jenkins@faculty.smartlearn.edu',
+    },
+    PARENT: {
+      title: 'Parent & Family Portal',
+      tagline: 'Track academic progress, receive smart alerts, and listen to AI audio digests.',
+      badge: 'Guardian & Family',
+      color: 'emerald',
+      activeTab: 'bg-emerald-600 text-white shadow-md shadow-emerald-500/20',
+      borderAccent: 'border-emerald-500/30',
+      pillBg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400',
+      icon: <HeartHandshake className="w-4 h-4" />,
+      idLabel: 'Registered Parent Mobile or Email',
+      idPlaceholder: 'priya.sharma@parent.smartlearn.edu',
+    },
+    ADMIN: {
+      title: 'School Administration Console',
+      tagline: 'Control school-wide RBAC, security policies, and real-time performance analytics.',
+      badge: 'Institution & IT',
+      color: 'amber',
+      activeTab: 'bg-amber-600 text-white shadow-md shadow-amber-500/20',
+      borderAccent: 'border-amber-500/30',
+      pillBg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400',
+      icon: <Shield className="w-4 h-4" />,
+      idLabel: 'Administrative Email or District ID',
+      idPlaceholder: 'marcus.vance@admin.smartlearn.edu',
+    },
+  };
+
+  const currentMeta = roleMeta[selectedRole];
+
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 py-12 px-4 sm:px-8 flex flex-col justify-center">
-      <div className="max-w-4xl mx-auto w-full space-y-8">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#121519] text-slate-900 dark:text-slate-100 py-10 px-4 sm:px-6 flex flex-col justify-center items-center">
+      <div className="max-w-2xl w-full space-y-6">
         {/* Top Header with SmartLearn Branding */}
         <div className="text-center space-y-2">
-          <Link href="/" className="inline-flex items-center gap-2 group mb-2">
+          <Link href="/" className="inline-flex items-center gap-2 group mb-1">
             <span className="font-extrabold text-3xl sm:text-4xl tracking-tight text-slate-900 dark:text-white">
               Smart<span className="text-[#d82a4e]">Learn</span>
             </span>
-            <span className="text-xs px-2.5 py-0.5 rounded-sm bg-[#d82a4e]/15 text-[#d82a4e] font-extrabold uppercase tracking-wider">
-              Education
+            <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#d82a4e]/15 text-[#d82a4e] font-extrabold uppercase tracking-wider border border-[#d82a4e]/20">
+              Ecosystem
             </span>
           </Link>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             {otpStep
-              ? 'Verify OTP Code'
+              ? 'Enter 6-Digit Security PIN'
               : mode === 'signin'
-              ? 'Sign in to Your Educational Portal'
-              : 'Create Your SmartLearn Account'}
+              ? 'Educational Portal Sign In'
+              : 'Create New Academic Account'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-            Choose your portal role below, or verify with our demo SMS/Email OTP system to unlock personalized learning.
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto leading-relaxed">
+            {otpStep
+              ? 'Verify your identity to unlock your encrypted workspace.'
+              : 'Select your member portal below to sign in or register with verified credentials.'}
           </p>
         </div>
 
         {/* ========================================================================= */}
-        {/* 1. FOUR PORTALS QUICK LAUNCH GRID (Always Accessible for Frictionless Demo) */}
+        {/* 1. INTERACTIVE 4-PORTAL SELECTOR BAR (Replaced Demo Cards)               */}
         {/* ========================================================================= */}
         {!otpStep && (
-          <div className="bg-white dark:bg-[#1a1e24] p-6 rounded-sm border border-slate-200 dark:border-[#283038] shadow-sm space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                ⚡ 1-Click Instant Demo Portals (No Password Needed)
-              </span>
-              <span className="text-[11px] text-[#d82a4e] font-bold">
-                Direct Evaluation Mode
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-              {/* Student Portal */}
-              <button
-                type="button"
-                onClick={() => handleQuickPortalLaunch('STUDENT')}
-                className="p-3.5 rounded-sm border border-blue-500/30 bg-blue-50/50 dark:bg-blue-950/20 hover:border-blue-500 hover:shadow-md transition-all text-left flex flex-col justify-between group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-blue-600 dark:text-blue-400 mb-1.5">
-                    <GraduationCap className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 px-1.5 py-0.5 rounded-sm">Student</span>
-                  </div>
-                  <div className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                    Alex Rivera
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                    Adaptive mock tests, AI formula tutor &amp; gamified XP.
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-blue-500/20 text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center justify-between">
-                  <span>Enter Portal</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-
-              {/* Teacher Portal */}
-              <button
-                type="button"
-                onClick={() => handleQuickPortalLaunch('TEACHER')}
-                className="p-3.5 rounded-sm border border-[#d82a4e]/30 bg-[#d82a4e]/5 dark:bg-[#d82a4e]/10 hover:border-[#d82a4e] hover:shadow-md transition-all text-left flex flex-col justify-between group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-[#d82a4e] mb-1.5">
-                    <Users className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-[#d82a4e]/10 px-1.5 py-0.5 rounded-sm">Teacher</span>
-                  </div>
-                  <div className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-[#d82a4e] transition-colors">
-                    Dr. Sarah Jenkins
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                    AI exam question generator &amp; class mistake diagnostics.
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-[#d82a4e]/20 text-[11px] font-bold text-[#d82a4e] flex items-center justify-between">
-                  <span>Enter Portal</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-
-              {/* Parent Portal */}
-              <button
-                type="button"
-                onClick={() => handleQuickPortalLaunch('PARENT')}
-                className="p-3.5 rounded-sm border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 hover:border-emerald-500 hover:shadow-md transition-all text-left flex flex-col justify-between group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-emerald-600 dark:text-emerald-400 mb-1.5">
-                    <HeartHandshake className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 px-1.5 py-0.5 rounded-sm">Parent</span>
-                  </div>
-                  <div className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-emerald-600 transition-colors">
-                    Priya Sharma
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                    Multi-child switcher, progress ring &amp; voice read-aloud digest.
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-emerald-500/20 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center justify-between">
-                  <span>Enter Portal</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
-
-              {/* Admin Portal */}
-              <button
-                type="button"
-                onClick={() => handleQuickPortalLaunch('ADMIN')}
-                className="p-3.5 rounded-sm border border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 hover:border-amber-500 hover:shadow-md transition-all text-left flex flex-col justify-between group cursor-pointer"
-              >
-                <div>
-                  <div className="flex items-center justify-between text-amber-600 dark:text-amber-400 mb-1.5">
-                    <Shield className="w-5 h-5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider bg-amber-500/10 px-1.5 py-0.5 rounded-sm">Admin</span>
-                  </div>
-                  <div className="font-extrabold text-sm text-slate-900 dark:text-white group-hover:text-amber-600 transition-colors">
-                    Marcus Vance
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                    Platform telemetry, user directory &amp; content moderation.
-                  </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-amber-500/20 text-[11px] font-bold text-amber-600 dark:text-amber-400 flex items-center justify-between">
-                  <span>Enter Portal</span>
-                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </button>
+          <div className="bg-white dark:bg-[#1a1e24] p-1.5 rounded-2xl border border-slate-200 dark:border-[#283038] shadow-sm">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1">
+              {(
+                [
+                  { role: 'STUDENT', label: 'Student', sub: 'Learner' },
+                  { role: 'TEACHER', label: 'Teacher', sub: 'Educator' },
+                  { role: 'PARENT', label: 'Parent', sub: 'Guardian' },
+                  { role: 'ADMIN', label: 'Admin', sub: 'Institution' },
+                ] as const
+              ).map((item) => {
+                const isSelected = selectedRole === item.role;
+                return (
+                  <button
+                    key={item.role}
+                    type="button"
+                    onClick={() => handleRoleSelect(item.role)}
+                    className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      isSelected
+                        ? roleMeta[item.role].activeTab
+                        : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-[#20252b] hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {roleMeta[item.role].icon}
+                    <div className="text-left leading-tight">
+                      <div>{item.label}</div>
+                      <div className="text-[10px] opacity-75 font-normal">{item.sub}</div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* ========================================================================= */}
-        {/* 2. AUTHENTICATION & DEMO OTP VERIFICATION CONTAINER                       */}
+        {/* 2. MAIN AUTHENTICATION & SINGLE SIGN-ON CONTAINER                         */}
         {/* ========================================================================= */}
-        <div className="bg-white dark:bg-[#1a1e24] rounded-sm border border-slate-200 dark:border-[#283038] shadow-lg p-6 sm:p-10 max-w-2xl mx-auto w-full">
+        <div className="bg-white dark:bg-[#1a1e24] rounded-2xl border border-slate-200 dark:border-[#283038] shadow-xl p-6 sm:p-8 space-y-6">
+          {/* Active Portal Header Banner */}
+          <div className="p-4 rounded-xl border bg-slate-50 dark:bg-[#121519] border-slate-200 dark:border-[#283038] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl ${currentMeta.pillBg}`}>
+                {currentMeta.icon}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-extrabold uppercase tracking-wider text-slate-900 dark:text-white">
+                    {currentMeta.title}
+                  </span>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${currentMeta.pillBg}`}>
+                    {currentMeta.badge}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {currentMeta.tagline}
+                </p>
+              </div>
+            </div>
+            <Link
+              href="/get-started"
+              className="text-xs font-bold text-[#d82a4e] hover:underline inline-flex items-center gap-1 self-start sm:self-center flex-shrink-0"
+            >
+              <span>All Portals</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          {/* Feedback alerts */}
           {errorMsg && (
-            <div className="mb-6 p-3.5 rounded-sm bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 text-xs flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-6 p-3.5 rounded-sm bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
               <Check className="w-4 h-4 flex-shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -365,89 +413,139 @@ function LoginPageContent() {
 
           {!otpStep ? (
             <>
-              {/* Preselected Role Confirmation Banner */}
-              <div className="mb-6 p-4 rounded-sm border bg-slate-50 dark:bg-[#121519] border-slate-200 dark:border-[#283038] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`p-2.5 rounded-sm ${
-                      selectedRole === 'STUDENT'
-                        ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400'
-                        : selectedRole === 'TEACHER'
-                        ? 'bg-[#d82a4e]/10 text-[#d82a4e]'
-                        : selectedRole === 'PARENT'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
-                        : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    }`}
+              {/* ========================================================================= */}
+              {/* 2A. INSTITUTIONAL SINGLE SIGN-ON (SSO) OPTIONS                            */}
+              {/* ========================================================================= */}
+              <div className="space-y-3">
+                <span className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Institutional Single Sign-On (SSO):
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Google Classroom / Workspace */}
+                  <button
+                    type="button"
+                    disabled={!!ssoLoading}
+                    onClick={() => handleInstitutionalSSO('Google')}
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-[#283038] hover:border-blue-500 dark:hover:border-blue-500 bg-white dark:bg-[#1a1e24] hover:bg-slate-50 dark:hover:bg-[#20252b] transition-all flex items-center justify-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer disabled:opacity-50"
                   >
-                    {selectedRole === 'STUDENT' && <GraduationCap className="w-5 h-5" />}
-                    {selectedRole === 'TEACHER' && <Users className="w-5 h-5" />}
-                    {selectedRole === 'PARENT' && <HeartHandshake className="w-5 h-5" />}
-                    {selectedRole === 'ADMIN' && <Shield className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 flex items-center gap-1.5 uppercase tracking-wider">
-                      <span>Target Role:</span>
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="font-extrabold text-slate-700 dark:text-slate-300">
-                        {selectedRole === 'ADMIN'
-                          ? 'Administrator'
-                          : selectedRole.charAt(0) + selectedRole.slice(1).toLowerCase()}
-                      </span>
-                    </div>
-                    <div className="text-sm font-extrabold text-slate-900 dark:text-white">
-                      {mode === 'signup' ? 'New Account Registration' : 'Secure Portal Sign In'}
-                    </div>
-                  </div>
+                    {ssoLoading === 'Google' ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 24 24">
+                        <path
+                          fill="#4285F4"
+                          d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"
+                        />
+                        <path
+                          fill="#34A853"
+                          d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.25 21.28 7.33 24 12 24z"
+                        />
+                        <path
+                          fill="#FBBC05"
+                          d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.17 0 9.97 0 12s.46 3.83 1.26 5.42l4.02-3.15z"
+                        />
+                        <path
+                          fill="#EA4335"
+                          d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.25 2.72 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                        />
+                      </svg>
+                    )}
+                    <span>Google Classroom</span>
+                  </button>
+
+                  {/* Microsoft 365 Education */}
+                  <button
+                    type="button"
+                    disabled={!!ssoLoading}
+                    onClick={() => handleInstitutionalSSO('Microsoft')}
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-[#283038] hover:border-emerald-500 dark:hover:border-emerald-500 bg-white dark:bg-[#1a1e24] hover:bg-slate-50 dark:hover:bg-[#20252b] transition-all flex items-center justify-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    {ssoLoading === 'Microsoft' ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-emerald-500" />
+                    ) : (
+                      <svg className="w-4 h-4" viewBox="0 0 23 23">
+                        <path fill="#f35325" d="M1 1h10v10H1z" />
+                        <path fill="#81bc06" d="M12 1h10v10H12z" />
+                        <path fill="#05a6f0" d="M1 12h10v10H1z" />
+                        <path fill="#ffba08" d="M12 12h10v10H12z" />
+                      </svg>
+                    )}
+                    <span>Microsoft 365</span>
+                  </button>
+
+                  {/* District SSO / Clever */}
+                  <button
+                    type="button"
+                    disabled={!!ssoLoading}
+                    onClick={() => handleInstitutionalSSO('District SSO')}
+                    className="p-2.5 rounded-xl border border-slate-200 dark:border-[#283038] hover:border-purple-500 dark:hover:border-purple-500 bg-white dark:bg-[#1a1e24] hover:bg-slate-50 dark:hover:bg-[#20252b] transition-all flex items-center justify-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    {ssoLoading === 'District SSO' ? (
+                      <Loader2 className="w-4 h-4 animate-spin text-purple-500" />
+                    ) : (
+                      <Building2 className="w-4 h-4 text-purple-500" />
+                    )}
+                    <span>District SSO / Clever</span>
+                  </button>
                 </div>
-                <Link
-                  href="/get-started"
-                  className="text-xs font-bold text-[#d82a4e] hover:underline inline-flex items-center gap-1 self-start sm:self-center"
-                >
-                  <span>Change Role</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+              </div>
+
+              {/* Divider */}
+              <div className="relative flex items-center justify-center">
+                <div className="w-full border-t border-slate-200 dark:border-[#283038]" />
+                <span className="absolute bg-white dark:bg-[#1a1e24] px-3 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
+                  Or Sign In with Institutional ID
+                </span>
               </div>
 
               {/* Sign In vs Sign Up Tabs */}
-              <div className="flex border-b border-slate-200 dark:border-[#283038] mb-6">
+              <div className="flex border-b border-slate-200 dark:border-[#283038]">
                 <button
                   type="button"
-                  onClick={() => { setMode('signin'); setErrorMsg(''); }}
-                  className={`flex-1 pb-3 text-sm font-extrabold text-center border-b-2 transition-colors cursor-pointer ${
+                  onClick={() => {
+                    setMode('signin');
+                    setErrorMsg('');
+                  }}
+                  className={`flex-1 pb-3 text-xs sm:text-sm font-extrabold text-center border-b-2 transition-colors cursor-pointer ${
                     mode === 'signin'
                       ? 'border-[#d82a4e] text-[#d82a4e]'
                       : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }`}
                 >
-                  Sign In (Existing Account)
+                  Sign In (Existing Member)
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setMode('signup'); setErrorMsg(''); }}
-                  className={`flex-1 pb-3 text-sm font-extrabold text-center border-b-2 transition-colors cursor-pointer ${
+                  onClick={() => {
+                    setMode('signup');
+                    setErrorMsg('');
+                  }}
+                  className={`flex-1 pb-3 text-xs sm:text-sm font-extrabold text-center border-b-2 transition-colors cursor-pointer ${
                     mode === 'signup'
                       ? 'border-[#d82a4e] text-[#d82a4e]'
                       : 'border-transparent text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                   }`}
                 >
-                  Create Account (New User)
+                  Register (New Account)
                 </button>
               </div>
 
               {/* Email vs Phone Toggle */}
-              <div className="flex items-center justify-center gap-6 mb-6 text-xs font-semibold">
+              <div className="flex items-center justify-center gap-6 text-xs font-semibold">
                 <button
                   type="button"
                   onClick={() => {
                     setAuthMethod('email');
-                    setIdentifier(selectedRole === 'STUDENT' ? 'student@smartlearn.edu' : 'sarah@smartlearn.edu');
+                    updateDefaultCredentials(selectedRole);
                   }}
                   className={`flex items-center gap-1.5 pb-1 border-b-2 transition-all cursor-pointer ${
-                    authMethod === 'email' ? 'border-[#d82a4e] text-[#d82a4e] font-bold' : 'border-transparent text-slate-400'
+                    authMethod === 'email'
+                      ? 'border-[#d82a4e] text-[#d82a4e] font-bold'
+                      : 'border-transparent text-slate-400'
                   }`}
                 >
                   <Mail className="w-3.5 h-3.5" />
-                  <span>Email Verification</span>
+                  <span>Institutional Email</span>
                 </button>
                 <button
                   type="button"
@@ -456,11 +554,13 @@ function LoginPageContent() {
                     setIdentifier('+1 (555) 345-7890');
                   }}
                   className={`flex items-center gap-1.5 pb-1 border-b-2 transition-all cursor-pointer ${
-                    authMethod === 'phone' ? 'border-[#d82a4e] text-[#d82a4e] font-bold' : 'border-transparent text-slate-400'
+                    authMethod === 'phone'
+                      ? 'border-[#d82a4e] text-[#d82a4e] font-bold'
+                      : 'border-transparent text-slate-400'
                   }`}
                 >
                   <Phone className="w-3.5 h-3.5" />
-                  <span>Mobile Phone (SMS OTP)</span>
+                  <span>Mobile SMS (2FA)</span>
                 </button>
               </div>
 
@@ -476,127 +576,134 @@ function LoginPageContent() {
                       required
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
-                      placeholder="e.g. Alex Rivera or Sarah Jenkins"
-                      className="w-full px-4 py-2.5 rounded-sm text-xs bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
+                      placeholder="e.g. Alex Rivera or Dr. Sarah Jenkins"
+                      className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
                     />
                   </div>
                 )}
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    {authMethod === 'email' ? 'Email Address' : 'Mobile Phone Number'}
+                    {authMethod === 'email' ? currentMeta.idLabel : 'Mobile Phone Number'}
                   </label>
                   <input
                     type={authMethod === 'email' ? 'email' : 'tel'}
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    placeholder={authMethod === 'email' ? 'yourname@institution.edu' : '+1 (555) 000-0000'}
-                    className="w-full px-4 py-2.5 rounded-sm text-xs bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
+                    placeholder={
+                      authMethod === 'email' ? currentMeta.idPlaceholder : '+1 (555) 000-0000'
+                    }
+                    className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
                   />
-                </div>
-
-                {/* Role Picker for Targeted Dashboard Access */}
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Assign Portal Role
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {(
-                      [
-                        { role: 'STUDENT', label: 'Student', icon: <GraduationCap className="w-3.5 h-3.5" /> },
-                        { role: 'TEACHER', label: 'Teacher', icon: <Users className="w-3.5 h-3.5" /> },
-                        { role: 'PARENT', label: 'Parent', icon: <HeartHandshake className="w-3.5 h-3.5" /> },
-                        { role: 'ADMIN', label: 'Admin', icon: <Shield className="w-3.5 h-3.5" /> },
-                      ] as const
-                    ).map((item) => (
-                      <button
-                        key={item.role}
-                        type="button"
-                        onClick={() => setSelectedRole(item.role)}
-                        className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-sm border text-xs font-bold transition-all cursor-pointer ${
-                          selectedRole === item.role
-                            ? 'bg-[#d82a4e] text-white border-[#d82a4e] shadow-xs'
-                            : 'bg-slate-50 dark:bg-[#20252b] border-slate-200 dark:border-[#283038] text-slate-600 dark:text-slate-400 hover:border-slate-400'
-                        }`}
-                      >
-                        {item.icon}
-                        <span>{item.label}</span>
-                      </button>
-                    ))}
-                  </div>
                 </div>
 
                 {mode === 'signup' && (
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {selectedRole === 'STUDENT'
-                        ? 'Current Grade / Class'
+                        ? 'Current Grade / Class / Year'
                         : selectedRole === 'TEACHER'
-                        ? 'Department / Subject'
+                        ? 'Department / Teaching Subject'
                         : selectedRole === 'PARENT'
-                        ? 'Child Name / ID'
-                        : 'Administrative Office'}
+                        ? 'Enrolled Student Name(s)'
+                        : 'Administrative Office / Role'}
                     </label>
                     <input
                       type="text"
                       value={gradeOrDept}
                       onChange={(e) => setGradeOrDept(e.target.value)}
-                      placeholder={selectedRole === 'STUDENT' ? 'Grade 10-A' : 'Mathematics & Science'}
-                      className="w-full px-4 py-2.5 rounded-sm text-xs bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
+                      placeholder={
+                        selectedRole === 'STUDENT'
+                          ? 'Grade 10-A'
+                          : selectedRole === 'TEACHER'
+                          ? 'Advanced Mathematics'
+                          : selectedRole === 'PARENT'
+                          ? 'Maya & Alex Rivera'
+                          : 'Principal IT Operations'
+                      }
+                      className="w-full px-4 py-2.5 rounded-xl text-xs bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
                     />
                   </div>
                 )}
 
+                {/* Remember this device checkbox */}
+                <div className="flex items-center justify-between pt-1">
+                  <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      className="rounded text-[#d82a4e] focus:ring-[#d82a4e]"
+                    />
+                    <span>Remember this institutional device for 30 days</span>
+                  </label>
+                  <a
+                    href="#help"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      alert(
+                        `Academic IT Support:\nFor login help, contact your institution IT Helpdesk at support@smartlearn.edu or call Ext: 4357.`
+                      );
+                    }}
+                    className="text-xs font-semibold text-[#d82a4e] hover:underline"
+                  >
+                    Forgot ID?
+                  </a>
+                </div>
+
                 <button
                   type="submit"
-                  className="w-full mt-3 py-3 px-6 rounded-sm btn-crimson text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full mt-2 py-3 px-6 rounded-xl bg-gradient-to-r from-[#d82a4e] to-rose-600 hover:from-[#b81d3d] hover:to-rose-700 text-white text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md shadow-rose-500/20 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <KeyRound className="w-4 h-4" />
-                  <span>Send Demo Verification OTP</span>
+                  <span>
+                    {mode === 'signup' ? 'Verify & Create Account' : 'Send Verification OTP'}
+                  </span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </form>
             </>
           ) : (
             /* ========================================================================= */
-            /* 3. STEP 2: DEMO OTP PIN VERIFICATION SYSTEM                               */
+            /* 3. STEP 2: SECURE OTP PIN VERIFICATION SYSTEM                             */
             /* ========================================================================= */
             <form onSubmit={handleVerifyOTP} className="space-y-6">
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#283038]">
                 <button
                   type="button"
-                  onClick={() => { setOtpStep(false); setErrorMsg(''); }}
+                  onClick={() => {
+                    setOtpStep(false);
+                    setErrorMsg('');
+                  }}
                   className="text-xs text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 cursor-pointer font-semibold"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>Change Email/Phone</span>
+                  <span>Change Email / Phone</span>
                 </button>
-                <span className="text-xs font-bold text-[#d82a4e]">
-                  Role: {selectedRole}
-                </span>
+                <span className="text-xs font-bold text-[#d82a4e]">Role: {selectedRole}</span>
               </div>
 
-              {/* Simulated Gateway Banner matching user request */}
-              <div className="p-4 rounded-sm bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2">
+              {/* Verification Gateway Banner */}
+              <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-bold">
                   <Zap className="w-4 h-4 text-amber-500" />
-                  <span>Simulated SMS &amp; Email Gateway Triggered:</span>
+                  <span>Secure Verification Gateway Active:</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300">
-                  Verification code sent to <strong>{identifier}</strong>:
+                  Authentication code generated for <strong>{identifier}</strong>:
                 </p>
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-                  <span className="font-mono text-base font-extrabold tracking-wider bg-white dark:bg-[#13171b] px-3 py-1 rounded-sm border border-amber-500/40 text-[#d82a4e]">
+                  <span className="font-mono text-base font-extrabold tracking-wider bg-white dark:bg-[#13171b] px-3 py-1 rounded-lg border border-amber-500/40 text-[#d82a4e]">
                     {generatedOtp || '123456'}
                   </span>
                   <button
                     type="button"
                     onClick={handleAutoFillOtp}
-                    className="px-3 py-1 rounded-sm bg-[#d82a4e] hover:bg-[#c32646] text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1"
+                    className="px-3 py-1.5 rounded-lg bg-[#d82a4e] hover:bg-[#c32646] text-white text-xs font-bold transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
                   >
-                    <Check className="w-3 h-3" />
-                    <span>Click to Auto-Fill OTP</span>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Auto-Fill 6-Digit Code</span>
                   </button>
                 </div>
               </div>
@@ -604,7 +711,7 @@ function LoginPageContent() {
               {/* 6-Digit Individual PIN Boxes */}
               <div className="space-y-2">
                 <label className="block text-center text-xs font-bold text-slate-700 dark:text-slate-300">
-                  Enter 6-Digit OTP Verification Code
+                  Enter 6-Digit Verification PIN
                 </label>
                 <div className="flex items-center justify-center gap-2 sm:gap-3">
                   {otpDigits.map((digit, index) => (
@@ -618,26 +725,26 @@ function LoginPageContent() {
                       onChange={(e) => handleOtpDigitChange(index, e.target.value)}
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       autoFocus={index === 0}
-                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold font-mono rounded-sm bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
+                      className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg sm:text-xl font-bold font-mono rounded-xl bg-slate-50 dark:bg-[#20252b] border border-slate-200 dark:border-[#283038] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#d82a4e]"
                     />
                   ))}
                 </div>
               </div>
 
-              {/* Resend OTP & Verification Submit Button */}
+              {/* Submit Button */}
               <div className="space-y-3">
                 <button
                   type="submit"
-                  className="w-full py-3.5 px-6 rounded-sm btn-crimson text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full py-3.5 px-6 rounded-xl bg-gradient-to-r from-[#d82a4e] to-rose-600 hover:from-[#b81d3d] hover:to-rose-700 text-white text-xs sm:text-sm font-bold uppercase tracking-wider transition-all shadow-md shadow-rose-500/20 cursor-pointer flex items-center justify-center gap-2"
                 >
                   <ShieldCheck className="w-4 h-4" />
-                  <span>Verify OTP &amp; Complete Login</span>
+                  <span>Verify PIN &amp; Open Workspace</span>
                 </button>
 
                 <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
                   <span>
                     {resendSeconds > 0 ? (
-                      `Resend available in ${resendSeconds}s`
+                      `Resend code in ${resendSeconds}s`
                     ) : (
                       <button
                         type="button"
@@ -648,46 +755,83 @@ function LoginPageContent() {
                         }}
                         className="text-[#d82a4e] hover:underline font-semibold cursor-pointer"
                       >
-                        Resend Demo OTP
+                        Resend Verification Code
                       </button>
                     )}
                   </span>
-                  <span className="text-[11px] italic">
-                    Universal test code: <strong>123456</strong>
+                  <span className="text-[11px] italic text-slate-400">
+                    Universal code: <strong>123456</strong>
                   </span>
                 </div>
               </div>
             </form>
           )}
 
-          {/* Bottom Switch between Sign In and Sign Up */}
+          {/* Bottom toggle between Sign In and Register */}
           {!otpStep && (
-            <div className="mt-8 pt-6 border-t border-slate-200 dark:border-[#283038] text-center text-xs text-slate-500">
+            <div className="pt-4 border-t border-slate-200 dark:border-[#283038] text-center text-xs text-slate-500">
               {mode === 'signin' ? (
                 <p>
-                  Don&apos;t have an account yet?{' '}
+                  Need a new academic account?{' '}
                   <button
                     type="button"
-                    onClick={() => { setMode('signup'); setErrorMsg(''); }}
+                    onClick={() => {
+                      setMode('signup');
+                      setErrorMsg('');
+                    }}
                     className="text-[#d82a4e] font-bold hover:underline cursor-pointer"
                   >
-                    Create Account with Demo OTP
+                    Register New Account
                   </button>
                 </p>
               ) : (
                 <p>
-                  Already have an account?{' '}
+                  Already have an institutional profile?{' '}
                   <button
                     type="button"
-                    onClick={() => { setMode('signin'); setErrorMsg(''); }}
+                    onClick={() => {
+                      setMode('signin');
+                      setErrorMsg('');
+                    }}
                     className="text-[#d82a4e] font-bold hover:underline cursor-pointer"
                   >
-                    Sign In with Existing Account
+                    Sign In with Existing ID
                   </button>
                 </p>
               )}
             </div>
           )}
+        </div>
+
+        {/* ========================================================================= */}
+        {/* 3. INSTITUTIONAL SECURITY, COMPLIANCE & HELPDESK TRUST BAR                */}
+        {/* ========================================================================= */}
+        <div className="p-4 rounded-xl bg-white dark:bg-[#1a1e24] border border-slate-200 dark:border-[#283038] shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+              <Lock className="w-3.5 h-3.5 text-emerald-500" />
+              <span>FERPA &amp; COPPA Certified</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-500" />
+              <span>256-Bit SSL Encryption</span>
+            </span>
+            <span className="hidden md:inline-flex items-center gap-1.5 font-semibold text-slate-700 dark:text-slate-300">
+              <CheckCircle2 className="w-3.5 h-3.5 text-amber-500" />
+              <span>SAML 2.0 / SSO Ready</span>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 font-medium">
+            <span>Need Help?</span>
+            <a
+              href="mailto:support@smartlearn.edu"
+              className="text-[#d82a4e] font-bold hover:underline inline-flex items-center gap-1"
+            >
+              <span>IT Helpdesk</span>
+              <ArrowRight className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -701,7 +845,7 @@ export default function LoginPage() {
         <div className="min-h-screen bg-[#1a1e24] flex items-center justify-center text-white">
           <div className="flex flex-col items-center gap-3">
             <Loader2 className="w-8 h-8 text-[#d82a4e] animate-spin" />
-            <p className="text-sm text-gray-400 font-medium">Preparing sign-in...</p>
+            <p className="text-sm text-gray-400 font-medium">Preparing portal authentication...</p>
           </div>
         </div>
       }

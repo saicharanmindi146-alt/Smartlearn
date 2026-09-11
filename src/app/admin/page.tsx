@@ -24,6 +24,7 @@ import {
   Tooltip,
 } from 'recharts';
 import { db } from '@/lib/db';
+import { OnboardingTour } from '@/components/shared/OnboardingTour';
 
 export default function AdminDashboardPage() {
   const usageData = [
@@ -38,6 +39,7 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
+      <OnboardingTour portalRole="ADMIN" />
       {/* 1. ADMIN COMMAND HEADER */}
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-amber-600 via-orange-600 to-amber-800 text-white shadow-xl shadow-amber-500/15">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">

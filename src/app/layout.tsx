@@ -23,7 +23,6 @@ export const viewport: Viewport = {
 
 import { ThemeInitializer } from '@/components/shared/ThemeInitializer';
 import { ToastProvider } from '@/components/shared/ToastContext';
-import { OnboardingTour } from '@/components/shared/OnboardingTour';
 import { WelcomeSplashModal } from '@/components/shared/WelcomeSplashModal';
 
 export default function RootLayout({
@@ -62,7 +61,6 @@ export default function RootLayout({
           <main className="flex-1 flex flex-col">{children}</main>
           <CommandPalette />
           <ConfettiEffect />
-          <OnboardingTour />
           <WelcomeSplashModal />
         </ToastProvider>
       </body>

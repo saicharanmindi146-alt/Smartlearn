@@ -26,6 +26,7 @@ import {
   Cell,
 } from 'recharts';
 import { db } from '@/lib/db';
+import { OnboardingTour } from '@/components/shared/OnboardingTour';
 
 export default function TeacherDashboardPage() {
   const weakTopics = db.weakTopics;
@@ -41,6 +42,7 @@ export default function TeacherDashboardPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
+      <OnboardingTour portalRole="TEACHER" />
       {/* 1. TEACHER WELCOME & QUICK ACTIONS HEADER */}
       <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-purple-700 via-indigo-700 to-purple-900 text-white shadow-xl shadow-purple-500/15">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">

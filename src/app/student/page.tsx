@@ -36,6 +36,7 @@ import {
 } from 'recharts';
 import { useStore } from '@/store/useStore';
 import { db } from '@/lib/db';
+import { OnboardingTour } from '@/components/shared/OnboardingTour';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -80,6 +81,7 @@ export default function StudentDashboard() {
 
   return (
     <div className="space-y-8 animate-in fade-in duration-200">
+      <OnboardingTour portalRole="STUDENT" />
       {/* 1. GREETING & MOTIVATIONAL STREAK BANNER */}
       <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-xl shadow-blue-500/10">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none" />

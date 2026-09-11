@@ -2,10 +2,16 @@
 
 import React, { useState } from 'react';
 import { useStore } from '@/store/useStore';
+import { Role } from '@/types';
 import { Sparkles, ArrowRight, Check, X, BookOpen, BrainCircuit, FileQuestion, Users, BarChart3, HeartHandshake, Shield } from 'lucide-react';
 
-export function OnboardingTour() {
+interface OnboardingTourProps {
+  portalRole?: Role;
+}
+
+export function OnboardingTour({ portalRole }: OnboardingTourProps = {}) {
   const currentUser = useStore((state) => state.currentUser);
+  const isLoggedIn = useStore((state) => state.isLoggedIn);
   const onboardingSeen = useStore((state) => state.onboardingSeen);
   const setOnboardingSeen = useStore((state) => state.setOnboardingSeen);
 
@@ -16,18 +22,24 @@ export function OnboardingTour() {
     setMounted(true);
   }, []);
 
-  const role = currentUser?.role || 'STUDENT';
+  // Only show when mounted, user is logged in, and user exists
+  if (!mounted || !isLoggedIn || !currentUser) return null;
+
+  const effectiveRole = portalRole || currentUser.role;
+  if (portalRole && currentUser.role !== portalRole) return null;
+
   const hasSeen =
-    !mounted ||
-    onboardingSeen[role] ||
-    (typeof window !== 'undefined' && !!sessionStorage.getItem(`sl_onboarding_seen_${role}`));
+    onboardingSeen[effectiveRole] ||
+    (typeof window !== 'undefined' && !!sessionStorage.getItem(`sl_onboarding_seen_${effectiveRole}`));
 
   if (hasSeen) return null;
+
+  const firstName = currentUser?.name ? currentUser.name.split(' ')[0] : '';
 
   const tours = {
     STUDENT: [
       {
-        title: 'Welcome to SmartLearn, Alex!',
+        title: `Welcome to SmartLearn, ${firstName || 'Alex'}!`,
         description: 'Your AI-powered personal learning ecosystem is ready. Here are the 4 superpowers crafted for you.',
         icon: <Sparkles className="w-6 h-6 text-blue-500" />,
       },
@@ -49,7 +61,7 @@ export function OnboardingTour() {
     ],
     TEACHER: [
       {
-        title: 'Welcome to the Teacher Command Hub, Dr. Jenkins!',
+        title: `Welcome to the Teacher Command Hub, ${currentUser?.name || 'Dr. Jenkins'}!`,
         description: 'Designed to cut grading and prep time by 70% so you can focus on inspiring your students.',
         icon: <Users className="w-6 h-6 text-purple-500" />,
       },
@@ -71,7 +83,7 @@ export function OnboardingTour() {
     ],
     PARENT: [
       {
-        title: 'Welcome, Priya!',
+        title: `Welcome, ${firstName || 'Priya'}!`,
         description: 'A clear, reassuring window into Alex and Maya’s educational journey without overwhelming academic jargon.',
         icon: <HeartHandshake className="w-6 h-6 text-emerald-500" />,
       },
@@ -93,7 +105,7 @@ export function OnboardingTour() {
     ],
     ADMIN: [
       {
-        title: 'Welcome to School Administration, Marcus!',
+        title: `Welcome to School Administration, ${firstName || 'Marcus'}!`,
         description: 'Complete operational visibility over students, faculty, course catalogs, and academic performance.',
         icon: <Shield className="w-6 h-6 text-amber-500" />,
       },
@@ -115,19 +127,19 @@ export function OnboardingTour() {
     ],
   };
 
-  const currentSteps = tours[role] || tours.STUDENT;
+  const currentSteps = tours[effectiveRole] || tours.STUDENT;
   const step = currentSteps[stepIndex];
 
   const handleNext = () => {
     if (stepIndex < currentSteps.length - 1) {
       setStepIndex(stepIndex + 1);
     } else {
-      setOnboardingSeen(role);
+      setOnboardingSeen(effectiveRole);
     }
   };
 
   const handleSkip = () => {
-    setOnboardingSeen(role);
+    setOnboardingSeen(effectiveRole);
   };
 
   return (
