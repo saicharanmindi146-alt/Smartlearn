@@ -27,6 +27,11 @@ import {
   Compass,
   Check,
   LogOut,
+  Users,
+  HeartHandshake,
+  Shield,
+  ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { Role } from '@/types';
@@ -230,7 +235,7 @@ export default function LandingPage() {
                   </span>
                   <span className="text-[11px] text-emerald-400 font-semibold flex items-center gap-1">
                     <CheckCircle2 className="w-3.5 h-3.5" />
-                    Demo OTP Verified
+                    Verified Academic Session
                   </span>
                 </div>
                 <p className="text-xs text-slate-300">
@@ -333,34 +338,58 @@ export default function LandingPage() {
             )}
           </div>
 
-          {/* Quick Demo Persona Chips */}
-          <div className="pt-6 flex flex-col sm:flex-row items-center justify-center gap-2.5 text-xs">
-            <span className="text-slate-300 font-medium">Or explore demo portals directly:</span>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button
-                onClick={() => handleLaunchDemo('STUDENT')}
-                className="px-3.5 py-1.5 rounded-sm bg-white/10 hover:bg-[#d82a4e] text-white border border-white/20 transition-all font-semibold flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>🎓 Student (Alex)</span>
-              </button>
-              <button
-                onClick={() => handleLaunchDemo('TEACHER')}
-                className="px-3.5 py-1.5 rounded-sm bg-white/10 hover:bg-[#d82a4e] text-white border border-white/20 transition-all font-semibold flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>👩‍🏫 Teacher (Sarah)</span>
-              </button>
-              <button
-                onClick={() => handleLaunchDemo('PARENT')}
-                className="px-3.5 py-1.5 rounded-sm bg-white/10 hover:bg-[#d82a4e] text-white border border-white/20 transition-all font-semibold flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>👨‍👩‍👧 Parent (Priya)</span>
-              </button>
-              <button
-                onClick={() => handleLaunchDemo('ADMIN')}
-                className="px-3.5 py-1.5 rounded-sm bg-white/10 hover:bg-[#d82a4e] text-white border border-white/20 transition-all font-semibold flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>⚡ Admin (Marcus)</span>
-              </button>
+          {/* Direct Portal Access & Institutional Trust Badges */}
+          <div className="pt-6 flex flex-col items-center justify-center gap-3 text-xs">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+              <span className="text-slate-300 font-medium">Direct Portal Access:</span>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <Link
+                  href="/login?role=student&mode=signin"
+                  className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-blue-600 text-white border border-white/20 hover:border-blue-400 transition-all font-semibold flex items-center gap-1.5 shadow-xs"
+                >
+                  <GraduationCap className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Student Portal</span>
+                </Link>
+                <Link
+                  href="/login?role=teacher&mode=signin"
+                  className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-[#d82a4e] text-white border border-white/20 hover:border-rose-400 transition-all font-semibold flex items-center gap-1.5 shadow-xs"
+                >
+                  <Users className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Teacher Hub</span>
+                </Link>
+                <Link
+                  href="/login?role=parent&mode=signin"
+                  className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-emerald-600 text-white border border-white/20 hover:border-emerald-400 transition-all font-semibold flex items-center gap-1.5 shadow-xs"
+                >
+                  <HeartHandshake className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Parent Portal</span>
+                </Link>
+                <Link
+                  href="/login?role=admin&mode=signin"
+                  className="px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-amber-600 text-white border border-white/20 hover:border-amber-400 transition-all font-semibold flex items-center gap-1.5 shadow-xs"
+                >
+                  <Shield className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Admin Console</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Institutional Trust Badges */}
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-[11px] text-slate-300/80 pt-1">
+              <span className="inline-flex items-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                <span>AI-Powered Adaptive Learning</span>
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="inline-flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3 text-blue-400" />
+                <span>FERPA &amp; COPPA Certified</span>
+              </span>
+              <span className="hidden sm:inline">•</span>
+              <span className="inline-flex items-center gap-1">
+                <Lock className="w-3 h-3 text-amber-400" />
+                <span>Single Sign-On (SSO) Ready</span>
+              </span>
             </div>
           </div>
         </div>
