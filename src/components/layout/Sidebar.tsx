@@ -29,6 +29,7 @@ import {
   Flame,
   LogOut,
   GraduationCap,
+  Briefcase,
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 
@@ -43,11 +44,19 @@ export function Sidebar() {
   const router = useRouter();
   const pathname = usePathname();
   const currentUser = useStore((state) => state.currentUser);
+  const academicProfile = useStore((state) => state.academicProfile);
   const logoutUser = useStore((state) => state.logoutUser);
   const triggerConfetti = useStore((state) => state.triggerConfetti);
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const role = currentUser?.role || 'STUDENT';
+
+  // Check if student is at Higher Education level (B.Tech, College, M.Tech, etc.)
+  const isHigherEd =
+    academicProfile?.educationalLevel === 'B.Tech' ||
+    academicProfile?.educationalLevel === 'College' ||
+    academicProfile?.educationalLevel === 'M.Tech' ||
+    academicProfile?.educationalLevel === 'Other / Professional';
 
   const studentNav: NavLinkItem[] = [
     { title: 'Dashboard', href: '/student', icon: <LayoutDashboard className="w-4 h-4" /> },
@@ -57,6 +66,9 @@ export function Sidebar() {
     { title: 'Tests & Contests', href: '/student/tests', icon: <FileQuestion className="w-4 h-4" />, badge: 'Live' },
     { title: 'AI Study Planner', href: '/student/planner', icon: <Calendar className="w-4 h-4 text-indigo-500" /> },
     { title: 'AI Revision', href: '/student/revision', icon: <Layers className="w-4 h-4 text-purple-500" /> },
+    ...(isHigherEd
+      ? [{ title: 'AI Mock Interview', href: '/student/mock-interview', icon: <Briefcase className="w-4 h-4 text-cyan-500" />, badge: 'B.Tech' }]
+      : []),
     { title: 'Notebook', href: '/student/notebook', icon: <FileText className="w-4 h-4" /> },
     { title: 'Focus Mode', href: '/student/focus', icon: <Clock className="w-4 h-4 text-emerald-500" /> },
     { title: 'Analytics', href: '/student/analytics', icon: <BarChart3 className="w-4 h-4" /> },

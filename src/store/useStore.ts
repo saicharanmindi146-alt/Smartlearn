@@ -1,11 +1,12 @@
 import { create } from 'zustand';
-import { User, Role, NotificationItem, StudentAcademicProfile, RecentlyViewedItem } from '@/types';
+import { User, Role, NotificationItem, StudentAcademicProfile, RecentlyViewedItem, TeacherApplication } from '@/types';
 import { db, INITIAL_USERS } from '@/lib/db';
 import { DEMO_ACCOUNTS } from '@/lib/auth';
 
 const LS_ACADEMIC_PROFILE = 'sl_academic_profile';
 const LS_RECENTLY_VIEWED = 'sl_recently_viewed';
 const LS_BOOKMARKS = 'sl_bookmarked_resources';
+const LS_TEACHER_APPLICATIONS = 'sl_teacher_applications';
 const SS_ONBOARDING_PREFIX = 'sl_onboarding_seen_';
 const SS_LOGIN_WELCOME = 'sl_login_welcome_shown';
 
@@ -78,6 +79,12 @@ interface SmartLearnState {
 
   // Session welcome
   setLoginWelcomeSeen: () => void;
+
+  // Teacher applications
+  teacherApplications: TeacherApplication[];
+  submitTeacherApplication: (app: { name: string; email: string; phone: string; department?: string; notes?: string }) => void;
+  approveTeacherApplication: (id: string) => void;
+  rejectTeacherApplication: (id: string) => void;
 }
 
 export const useStore = create<SmartLearnState>((set, get) => ({
@@ -99,6 +106,30 @@ export const useStore = create<SmartLearnState>((set, get) => ({
 
   // Check sessionStorage for login welcome (once per session)
   loginWelcomeSeen: loadFromStorage<boolean>(SS_LOGIN_WELCOME, false, 'session'),
+
+  // Teacher applications (persisted)
+  teacherApplications: loadFromStorage<TeacherApplication[]>(LS_TEACHER_APPLICATIONS, [
+    {
+      id: 'app-teach-1',
+      name: 'Dr. Michael Chang',
+      email: 'm.chang@stanford.alum.edu',
+      phone: '+1 (555) 382-9104',
+      department: 'Computer Science & AI',
+      submittedAt: 'Today at 2:15 PM',
+      status: 'PENDING',
+      notes: 'Ph.D. in CS; applied to teach Advanced Distributed Systems & AI Systems.',
+    },
+    {
+      id: 'app-teach-2',
+      name: 'Ananya Roy, M.Sc.',
+      email: 'ananya.roy@physics.org',
+      phone: '+1 (555) 749-1120',
+      department: 'Applied Physics & Optics',
+      submittedAt: 'Yesterday at 4:30 PM',
+      status: 'PENDING',
+      notes: '7 years teaching Physics & Mechanics; NCERT and JEE syllabus materials prepared.',
+    },
+  ]),
 
   setCurrentUser: (user) => set({ currentUser: user, isLoggedIn: !!user }),
 
@@ -284,6 +315,95 @@ export const useStore = create<SmartLearnState>((set, get) => ({
   setLoginWelcomeSeen: () => {
     saveToStorage(SS_LOGIN_WELCOME, true, 'session');
     set({ loginWelcomeSeen: true });
+  },
+
+  // Teacher applications actions
+  submitTeacherApplication: (app) => {
+    const newApp: TeacherApplication = {
+      id: `app-teach-${Date.now()}`,
+      name: app.name,
+      email: app.email,
+      phone: app.phone,
+      department: app.department || 'General Faculty',
+      notes: app.notes || 'Submitted via public portal instructor form',
+      submittedAt: 'Just now',
+      status: 'PENDING',
+    };
+    const updated = [newApp, ...get().teacherApplications];
+    saveToStorage(LS_TEACHER_APPLICATIONS, updated);
+    set({ teacherApplications: updated });
+
+    // Also push a notification for Admin
+    db.notifications.unshift({
+      id: `notif-app-${Date.now()}`,
+      userId: 'user-admin-marcus',
+      title: `📥 New Faculty Application: ${app.name}`,
+      message: `${app.name} (${app.email}) submitted a teacher request for ${app.department || 'General Faculty'}. Review in Admin Command Hub.`,
+      type: 'system',
+      read: false,
+      createdAt: 'Just now',
+      linkUrl: '/admin',
+    });
+    set({ notifications: [...db.notifications] });
+  },
+
+  approveTeacherApplication: (id) => {
+    const apps = get().teacherApplications;
+    const target = apps.find((a) => a.id === id);
+    if (!target) return;
+
+    const updated = apps.map((a) =>
+      a.id === id ? { ...a, status: 'APPROVED' as const } : a
+    );
+    saveToStorage(LS_TEACHER_APPLICATIONS, updated);
+    set({ teacherApplications: updated });
+
+    // Add to verified teachers in db if not exists
+    const existing = db.users.find((u) => u.email === target.email);
+    if (!existing) {
+      const newTeacher: User = {
+        id: `user-teacher-${Date.now()}`,
+        name: target.name,
+        email: target.email,
+        phone: target.phone,
+        role: 'TEACHER',
+        avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80',
+        createdAt: new Date().toISOString(),
+        teacherProfile: {
+          department: target.department || 'Faculty Department',
+          subjects: ['General STEM'],
+          classes: ['Class 10-A'],
+          experienceYears: 5,
+          rating: 5.0,
+        },
+      };
+      db.users.push(newTeacher);
+    }
+
+    db.notifications.unshift({
+      id: `notif-approved-${Date.now()}`,
+      userId: 'user-admin-marcus',
+      title: `✅ Faculty Application Approved: ${target.name}`,
+      message: `${target.name} has been approved as an authorized teacher with full curriculum & testing privileges.`,
+      type: 'badge',
+      read: false,
+      createdAt: 'Just now',
+      linkUrl: '/admin/users',
+    });
+    set({ notifications: [...db.notifications] });
+    get().triggerConfetti();
+  },
+
+  rejectTeacherApplication: (id) => {
+    const apps = get().teacherApplications;
+    const target = apps.find((a) => a.id === id);
+    if (!target) return;
+
+    const updated = apps.map((a) =>
+      a.id === id ? { ...a, status: 'REJECTED' as const } : a
+    );
+    saveToStorage(LS_TEACHER_APPLICATIONS, updated);
+    set({ teacherApplications: updated });
   },
 }));
 

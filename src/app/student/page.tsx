@@ -20,6 +20,7 @@ import {
   TrendingUp,
   Clock,
   GraduationCap,
+  Briefcase,
 } from 'lucide-react';
 import {
   LineChart,
@@ -37,16 +38,25 @@ import {
 import { useStore } from '@/store/useStore';
 import { db } from '@/lib/db';
 import { OnboardingTour } from '@/components/shared/OnboardingTour';
+import { StudentAcademicProfile } from '@/types';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const currentUser = useStore((state) => state.currentUser);
   const academicProfile = useStore((state) => state.academicProfile);
+  const setAcademicProfile = useStore((state) => state.setAcademicProfile);
   const recentlyViewed = useStore((state) => state.recentlyViewed);
   const addXP = useStore((state) => state.addXP);
   const triggerConfetti = useStore((state) => state.triggerConfetti);
 
   const [selectedMood, setSelectedMood] = useState<string | null>('happy');
+
+  // Higher Ed / B.Tech check
+  const isHigherEd =
+    academicProfile?.educationalLevel === 'B.Tech' ||
+    academicProfile?.educationalLevel === 'College' ||
+    academicProfile?.educationalLevel === 'M.Tech' ||
+    academicProfile?.educationalLevel === 'Other / Professional';
 
   const student = currentUser?.studentProfile;
   const courses = db.courses;
@@ -128,6 +138,102 @@ export default function StudentDashboard() {
           </div>
         </div>
       </div>
+
+      {/* CATEGORY & EDUCATIONAL LEVEL SELECTOR BAR */}
+      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="w-4 h-4 text-slate-400" />
+          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            Current Education Category:
+          </span>
+          <span className="text-xs font-black text-[#d82a4e]">
+            {isHigherEd ? 'B.Tech / Higher Education' : 'School (Class 10)'}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-400">Switch Track:</span>
+          <button
+            type="button"
+            onClick={() => {
+              setAcademicProfile({
+                educationalLevel: 'School',
+                stream: 'Secondary',
+                classLevel: 'Class 10',
+                classId: 'class-10',
+                board: 'CBSE',
+                subjects: ['Mathematics', 'Science', 'Social Science', 'English'],
+                learningGoals: ['exam_prep'],
+                onboardingCompleted: true,
+              });
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              !isHigherEd
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            🏫 School Track
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAcademicProfile({
+                educationalLevel: 'B.Tech',
+                stream: 'Computer Science & Engineering',
+                classLevel: 'Semester 7',
+                classId: 'btech-sem7',
+                board: 'Autonomous University / AICTE',
+                subjects: ['Data Structures & Algorithms', 'Operating Systems', 'Computer Networks', 'DBMS', 'Web Systems'],
+                learningGoals: ['competitive_exams', 'practice'],
+                onboardingCompleted: true,
+              });
+              triggerConfetti();
+            }}
+            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              isHigherEd
+                ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+          >
+            ⚙️ B.Tech Engineering
+          </button>
+        </div>
+      </div>
+
+      {/* HIGHER ED EXCLUSIVE: AI MOCK INTERVIEW PLACEMENT CHAMBER (Hidden for School Category) */}
+      {isHigherEd && (
+        <div className="p-6 sm:p-7 rounded-3xl bg-gradient-to-r from-cyan-950 via-slate-900 to-indigo-950 text-white border border-cyan-500/30 shadow-xl shadow-cyan-950/20 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div className="space-y-2">
+            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 text-[11px] font-black uppercase tracking-wider">
+              <Sparkles className="w-3 h-3" />
+              <span>Higher Ed Exclusive &bull; Campus Placement Accelerator</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black text-white">
+              AI Mock Interview & Placement Chamber
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-xl leading-relaxed">
+              Practice full-stack system architecture, data structures, and HR leadership interviews with voice synthesis, real-time feedback, and automated placement scoring.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1 text-[10px] font-bold text-slate-400">
+              <span className="bg-white/10 px-2 py-0.5 rounded-md text-cyan-300">SDE-1 Coding</span>
+              <span className="bg-white/10 px-2 py-0.5 rounded-md text-cyan-300">System Design</span>
+              <span className="bg-white/10 px-2 py-0.5 rounded-md text-cyan-300">Cloud & DevOps</span>
+              <span className="bg-white/10 px-2 py-0.5 rounded-md text-cyan-300">STAR Behavioral</span>
+            </div>
+          </div>
+
+          <Link
+            href="/student/mock-interview"
+            className="w-full md:w-auto px-6 py-3.5 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs uppercase tracking-wider text-center shadow-lg shadow-cyan-500/25 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Briefcase className="w-4 h-4 text-slate-950" />
+            Launch Interview Chamber
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
+      )}
 
       {/* Onboarding invite if profile incomplete */}
       {!academicProfile?.onboardingCompleted && (

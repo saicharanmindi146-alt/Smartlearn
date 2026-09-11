@@ -340,3 +340,14 @@ export interface LeaderboardEntry {
   streakDays: number;
   tier: 'Diamond' | 'Platinum' | 'Gold' | 'Silver' | 'Bronze';
 }
+
+export interface TeacherApplication {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  department?: string;
+  submittedAt: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  notes?: string;
+}

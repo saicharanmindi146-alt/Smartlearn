@@ -14,6 +14,13 @@ import {
   ArrowRight,
   Sparkles,
   Server,
+  UserCheck,
+  UserX,
+  CheckCircle2,
+  Clock,
+  Mail,
+  Phone,
+  GraduationCap,
 } from 'lucide-react';
 import {
   ResponsiveContainer,
@@ -24,9 +31,16 @@ import {
   Tooltip,
 } from 'recharts';
 import { db } from '@/lib/db';
+import { useStore } from '@/store/useStore';
 import { OnboardingTour } from '@/components/shared/OnboardingTour';
 
 export default function AdminDashboardPage() {
+  const teacherApplications = useStore((state) => state.teacherApplications);
+  const approveTeacherApplication = useStore((state) => state.approveTeacherApplication);
+  const rejectTeacherApplication = useStore((state) => state.rejectTeacherApplication);
+  const triggerConfetti = useStore((state) => state.triggerConfetti);
+
+  const pendingCount = teacherApplications.filter((a) => a.status === 'PENDING').length;
   const usageData = [
     { day: 'Day 1', activeUsers: 480 },
     { day: 'Day 5', activeUsers: 620 },
@@ -199,6 +213,134 @@ export default function AdminDashboardPage() {
             Manage All Users & RBAC
           </Link>
         </div>
+      </div>
+
+      {/* 4. FACULTY APPLICATIONS & INSTRUCTOR REQUESTS QUEUE */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center">
+                <GraduationCap className="w-5 h-5" />
+              </div>
+              <h3 className="font-extrabold text-lg text-slate-900 dark:text-white">
+                Faculty Applications & Instructor Requests Queue
+              </h3>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              Public requests submitted through the &quot;Sign up to become a teacher&quot; portal. Administrators decide whether to grant educator credentials and curriculum publishing privileges.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-black ${
+                pendingCount > 0
+                  ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 animate-pulse'
+                  : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+              }`}
+            >
+              {pendingCount} Pending Review
+            </span>
+          </div>
+        </div>
+
+        {teacherApplications.length === 0 ? (
+          <div className="py-12 text-center space-y-3 bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+            <GraduationCap className="w-10 h-10 text-slate-400 mx-auto" />
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
+              No Pending Faculty Applications
+            </p>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Any teacher applicant filling out the home page form will appear here immediately for administrative approval.
+            </p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-100 dark:divide-slate-800">
+            {teacherApplications.map((app) => (
+              <div
+                key={app.id}
+                className="py-4.5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors"
+              >
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-3">
+                    <span className="font-extrabold text-sm sm:text-base text-slate-900 dark:text-white">
+                      {app.name}
+                    </span>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+                      {app.department}
+                    </span>
+                    <span
+                      className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                        app.status === 'PENDING'
+                          ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                          : app.status === 'APPROVED'
+                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                          : 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                      }`}
+                    >
+                      {app.status === 'PENDING' && 'Pending Approval'}
+                      {app.status === 'APPROVED' && 'Accepted & Active'}
+                      {app.status === 'REJECTED' && 'Declined'}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400">
+                    <span className="flex items-center gap-1">
+                      <Mail className="w-3.5 h-3.5 text-slate-400" />
+                      {app.email}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Phone className="w-3.5 h-3.5 text-slate-400" />
+                      {app.phone}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      Submitted {new Date(app.submittedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {app.status === 'PENDING' ? (
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          approveTeacherApplication(app.id);
+                          triggerConfetti();
+                        }}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md shadow-emerald-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <UserCheck className="w-4 h-4" />
+                        Accept & Provision
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => rejectTeacherApplication(app.id)}
+                        className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-200 dark:border-rose-900/60 transition-all flex items-center gap-1 cursor-pointer"
+                      >
+                        <UserX className="w-4 h-4" />
+                        Decline
+                      </button>
+                    </>
+                  ) : app.status === 'APPROVED' ? (
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                      <CheckCircle2 className="w-4 h-4" />
+                      Teacher Account Active
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-xl border border-rose-500/20">
+                      <UserX className="w-4 h-4" />
+                      Application Rejected
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

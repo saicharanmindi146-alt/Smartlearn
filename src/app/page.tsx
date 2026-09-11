@@ -45,6 +45,7 @@ export default function LandingPage() {
   const switchDemoRole = useStore((state) => state.switchDemoRole);
   const setWelcomeSplashOpen = useStore((state) => state.setWelcomeSplashOpen);
   const triggerConfetti = useStore((state) => state.triggerConfetti);
+  const submitTeacherApplication = useStore((state) => state.submitTeacherApplication);
 
   // GitHub Pages SPA redirect handler (restores deep link when navigating directly or refreshing)
   React.useEffect(() => {
@@ -70,6 +71,7 @@ export default function LandingPage() {
 
   const courseCategories = [
     {
+      id: 'cat-it-dev',
       title: 'IT Development',
       desc: 'Software engineering, algorithms, data structures, and practical coding projects.',
       count: '120 Courses',
@@ -77,6 +79,7 @@ export default function LandingPage() {
       isHighlight: false,
     },
     {
+      id: 'cat-web-design',
       title: 'Web Design',
       desc: 'User interface design, modern CSS layouts, accessibility, and visual hierarchies.',
       count: '70 Courses',
@@ -84,6 +87,7 @@ export default function LandingPage() {
       isHighlight: true, // Shown highlighted in red in the video
     },
     {
+      id: 'cat-illustration',
       title: 'Illustration & Drawing',
       desc: 'Technical drawing, scientific diagrams, and digital illustration foundations.',
       count: '55 Courses',
@@ -91,6 +95,7 @@ export default function LandingPage() {
       isHighlight: false,
     },
     {
+      id: 'cat-social-media',
       title: 'Social Media',
       desc: 'Content strategy, digital outreach, and data-driven educational storytelling.',
       count: '40 Courses',
@@ -98,6 +103,7 @@ export default function LandingPage() {
       isHighlight: false,
     },
     {
+      id: 'cat-photoshop',
       title: 'Photoshop',
       desc: 'Image retouching, composite generation, and professional digital asset creation.',
       count: '220 Courses',
@@ -105,6 +111,7 @@ export default function LandingPage() {
       isHighlight: true, // Shown highlighted in red in the video
     },
     {
+      id: 'cat-crypto',
       title: 'Cryptocurrencies',
       desc: 'Blockchain architecture, decentralized consensus, and cryptographic principles.',
       count: '25 Courses',
@@ -180,18 +187,30 @@ export default function LandingPage() {
 
   const handleSearchCourseSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    switchDemoRole('STUDENT');
-    router.push(`/student/courses?q=${encodeURIComponent(courseSearchTerm)}`);
+    const q = (courseSearchTerm + ' ' + courseSearchCategory).toLowerCase().trim();
+    if (q.includes('calc') || q.includes('math')) router.push('/courses/course-calc-1');
+    else if (q.includes('phys') || q.includes('vector')) router.push('/courses/course-phys-1');
+    else if (q.includes('ai') || q.includes('python')) router.push('/courses/course-ai-1');
+    else if (q.includes('art') || q.includes('craft')) router.push('/courses/fc-1');
+    else if (q.includes('photo') || q.includes('image')) router.push('/courses/cat-photoshop');
+    else if (q.includes('crypto') || q.includes('block')) router.push('/courses/cat-crypto');
+    else if (q.includes('design') || q.includes('web')) router.push('/courses/cat-web-design');
+    else if (q.includes('social') || q.includes('media')) router.push('/courses/cat-social-media');
+    else if (q.includes('financ') || q.includes('market')) router.push('/courses/fc-4');
+    else router.push('/courses/fc-2');
   };
 
   const handleTeacherSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!teacherName.trim() || !teacherEmail.trim()) return;
+    submitTeacherApplication({
+      name: teacherName.trim(),
+      email: teacherEmail.trim(),
+      phone: teacherPhone.trim() || '+1 (555) 000-0000',
+      department: 'STEM & Applied Sciences',
+    });
     triggerConfetti();
     setTeacherSubmitted(true);
-    setTimeout(() => {
-      switchDemoRole('TEACHER');
-      router.push('/teacher');
-    }, 1500);
   };
 
   const handleNewsletterSubmit = (e: React.FormEvent) => {
@@ -416,8 +435,7 @@ export default function LandingPage() {
               <div
                 key={idx}
                 onClick={() => {
-                  switchDemoRole('STUDENT');
-                  router.push('/student/courses');
+                  router.push(`/courses/${cat.id}`);
                 }}
                 className="group cursor-pointer rounded-sm overflow-hidden border border-slate-200 dark:border-[#283038] shadow-sm hover:shadow-2xl transition-all duration-300"
               >
@@ -540,8 +558,7 @@ export default function LandingPage() {
             <div
               key={c.id}
               onClick={() => {
-                switchDemoRole('STUDENT');
-                router.push('/student/courses');
+                router.push(`/courses/${c.id}`);
               }}
               className="bg-white dark:bg-[#1a1e24] rounded-sm overflow-hidden border border-slate-200 dark:border-[#283038] shadow-sm hover:shadow-xl transition-all cursor-pointer group flex flex-col justify-between"
             >
@@ -604,8 +621,35 @@ export default function LandingPage() {
             </p>
 
             {teacherSubmitted ? (
-              <div className="bg-white/20 p-4 rounded-sm">
-                <p className="font-bold text-sm">🎉 Application submitted! Redirecting to Teacher Hub...</p>
+              <div className="bg-white/20 p-5 rounded-sm border border-white/30 space-y-3">
+                <div className="flex items-center gap-2 font-extrabold text-base">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-300" />
+                  <span>Application Forwarded to Admin</span>
+                </div>
+                <p className="text-xs text-white/95 leading-relaxed">
+                  Thank you, <strong>{teacherName}</strong>. Your teacher application has been submitted directly to the <strong>Admin Command Hub</strong>. The administrator will review your profile and decide whether to accept or decline your faculty access.
+                </p>
+                <div className="pt-2 flex flex-wrap gap-2">
+                  <Link
+                    href="/admin"
+                    className="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-sm bg-[#1a1e24] text-white hover:bg-black transition-colors"
+                  >
+                    Open Admin Queue
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTeacherSubmitted(false);
+                      setTeacherName('');
+                      setTeacherEmail('');
+                      setTeacherPhone('');
+                    }}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-sm border border-white/40 text-white hover:bg-white/10"
+                  >
+                    Submit Another
+                  </button>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleTeacherSubmit} className="space-y-3 max-w-sm">

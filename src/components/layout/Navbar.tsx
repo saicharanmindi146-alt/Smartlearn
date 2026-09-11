@@ -248,28 +248,28 @@ export function Navbar() {
                         onClick={() => handleSwitchRole('STUDENT')}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
                       >
-                        <span>🎓 Student (Alex)</span>
+                        <span>🎓 Student Workspace</span>
                         {currentRole === 'STUDENT' && <span className="text-[#d82a4e] text-[10px] font-bold">Active</span>}
                       </button>
                       <button
                         onClick={() => handleSwitchRole('TEACHER')}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
                       >
-                        <span>👩‍🏫 Teacher (Sarah)</span>
+                        <span>👩‍🏫 Teacher Hub</span>
                         {currentRole === 'TEACHER' && <span className="text-[#d82a4e] text-[10px] font-bold">Active</span>}
                       </button>
                       <button
                         onClick={() => handleSwitchRole('PARENT')}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
                       >
-                        <span>👨‍👩‍👧 Parent (Priya)</span>
+                        <span>👨‍👩‍👧 Parent Portal</span>
                         {currentRole === 'PARENT' && <span className="text-emerald-500 text-[10px] font-bold">Active</span>}
                       </button>
                       <button
                         onClick={() => handleSwitchRole('ADMIN')}
                         className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold text-left hover:bg-slate-100 dark:hover:bg-[#20252b]"
                       >
-                        <span>⚡ Admin (Marcus)</span>
+                        <span>⚡ Admin Console</span>
                         {currentRole === 'ADMIN' && <span className="text-amber-500 text-[10px] font-bold">Active</span>}
                       </button>
                     </div>
