@@ -1,4 +1,4 @@
 :HL["/_next/static/chunks/26jnf1t53u20v.css","style"]
 :HL["https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop","image"]
 :HL["https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80","image"]
-0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"courses","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"course-stats-1","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"GaeG4-BX0bsmVFAg2JAkT"}
+0:{"tree":{"name":"","param":null,"prefetchHints":4176,"slots":{"children":{"name":"courses","param":null,"prefetchHints":4192,"slots":{"children":{"name":"id","param":{"type":"d","key":"course-stats-1","siblings":[]},"prefetchHints":4192,"slots":{"children":{"name":"__PAGE__","param":null,"prefetchHints":4256,"slots":null}}}}}}},"staleTime":300,"buildId":"UlsuhRJJcIVtlmFS8-3D2"}
